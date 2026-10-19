@@ -4,7 +4,7 @@
 
 采用 VIKINGYFY 维护的源码及 IPQ60XX-WIFI-YES 配置，沿用其内核、NSS、ath11k/QCN9074、设备树和底层驱动适配，集中定制日常需要的代理、容器、存储与管理功能。
 
-[固件下载](https://github.com/zhaomeeng/Athena-ImmortalWrt/releases) · [Actions 构建入口](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/workflows/ATHENA.yml) · [构建与升级说明](docs/OPERATIONS.md) · [开发状态](docs/DEVELOPMENT_STATUS.md)
+[固件下载](https://github.com/zhaomeeng/Athena-ImmortalWrt/releases) · [手动编译](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/workflows/ATHENA.yml) · [自动更新来源](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/workflows/SOURCE-UPDATE.yml) · [构建与升级说明](docs/OPERATIONS.md) · [开发状态](docs/DEVELOPMENT_STATUS.md)
 
 ## 定制特点
 
@@ -53,9 +53,9 @@ Get-FileHash .\immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgra
 
 升级方式为：**本仓库重新编译 → 下载并核对镜像 → 手动升级**。具体操作见 [OPERATIONS.md](docs/OPERATIONS.md)。
 
-## 自行编译
+## 手动编译固件
 
-1. 打开 [Actions 构建入口](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/workflows/ATHENA.yml)，通过 **Run workflow** 保持 `preview=true` 运行预检。
+1. 打开 [Athena Build Firmware](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/workflows/ATHENA.yml)，通过 **Run workflow** 保持 `preview=true` 运行预检。
 2. 确认两段预检成功，检查必需应用、空的 `protected.diff`、空的 `selected-rust-consumers.txt` 及检查点恢复结果。
 3. 使用相同配置和版本锁，以 `preview=false` 启动正式编译。
 4. 等待工具链/内核、软件包/镜像两个任务依次完成，从 Releases 下载成果物。
@@ -64,13 +64,21 @@ Get-FileHash .\immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgra
 
 实际雅典娜镜像会检查 IPQ6018 分段固件、QCN9074 固件、OpenClash/Mihomo、PassWall2/Xray/Sing-box、Docker 和首次启动服务设置，再生成校验清单并发布。
 
-## 版本与更新策略
+## 自动更新来源，按需手动编译
 
-[build.lock.tsv](build.lock.tsv) 固定源码、feeds、第三方插件及 Mihomo 二进制的版本。当前已发布双代理固件使用 `VIKINGYFY/immortalwrt` 的 `main` 分支提交 `0fb9b10cb9df51fb076470e1dd93d1c30dd89d83`；实际版本以对应 Release 的来源记录为准。
+[Athena Update Sources](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/workflows/SOURCE-UPDATE.yml) 每天 **北京时间 11:20** 在 GitHub 检查上游 `IPQ60XX-WIFI-YES` 发布，确认包含雅典娜镜像后，更新 [build.lock.tsv](build.lock.tsv) 中的源码及必要 feed 提交，并提交来源记录 `sources/upstream.json`。
 
-**目前采用手动触发构建，尚未启用自动跟随上游更新。** 保持版本锁重新编译，会继续使用锁定的源码与软件包。
+- 自动阶段只核对发布来源、源码提交和 feed 锁完整性，**不运行固件编译或 defconfig、不生成新固件、不发布 Release**。
+- 同一源码提交不重复更新；OpenClash、PassWall2、Lucky 等自定义插件锁及 Mihomo 二进制锁保持固定，应用 overlay 保留。
+- 当前更新策略跟随作者的 `owrt` 分支；来源、分支、feed 地址异常或版本回退时停止更新并保留失败日志。
+- 编译入口仅支持手动触发。需要新固件时，再按上节运行预检和正式编译；真实配置和依赖兼容性在这时验证。
+- 两个任务均在 GitHub 云端运行，电脑可以关机。保留手动检查入口；GitHub 定时任务可能延迟，公开仓库长期不活跃时也可能停用。
 
-跟随上游更新的可行性、`main` → `owrt` 分支变化及建议流程，见 [上游更新方案](docs/UPSTREAM_UPDATES.md)。建议以适用于本设备的平台发布为更新信号，先预检、再构建候选固件，经过设备测试后再用于日常运行。
+手动运行更新任务时，`dry_run=true` 仅报告建议变更；取消该选项才会提交更新。普通 push、定时检查及来源更新提交都不会触发固件构建。
+
+**仓库最新源码与已发布固件是两种状态。** 已发布双代理固件仍对应原 `main` 提交 `0fb9b10cb9df51fb076470e1dd93d1c30dd89d83`；来源自动更新后，新的源码需要等你手动编译才会成为新固件。以各 Release 保存的锁文件和构建记录确认该固件实际使用的版本。
+
+策略、异常处理和手动入口见 [上游更新说明](docs/UPSTREAM_UPDATES.md)。
 
 ## 来源与验证范围
 

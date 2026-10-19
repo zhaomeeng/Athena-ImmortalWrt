@@ -1,49 +1,53 @@
-# 跟随上游发布更新与自动编译方案
+# 自动更新构建来源，手动编译固件
 
-分析日期：2026-10-19（Asia/Shanghai）。本文件是可行性分析和实施建议，当前没有启用定时检查、自动改锁或自动编译流程。
+更新日期：2026-10-19（Asia/Shanghai）。用户已明确采用本模式，替代先前“更新后自动编译候选固件”的建议。
 
-## 结论
+## 两个独立入口
 
-可以实现“发现适用于雅典娜的新上游发布 → 更新一组可追溯的版本锁 → 预检 → 编译并发布候选固件”。需要沿用作者对应平台的适配，并持续保留本项目的应用 overlay。
+| 工作流 | 触发方式 | 执行内容 |
+| --- | --- | --- |
+| [Athena Update Sources](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/workflows/SOURCE-UPDATE.yml) | 每天北京时间 11:20；也可手动运行 | 读取上游发布元数据，更新源码/feed 版本锁与来源记录 |
+| [Athena Build Firmware](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/workflows/ATHENA.yml) | 仅手动 Run workflow | 先 `preview=true` 做真实配置/恢复预检，再以相同锁运行 `preview=false` 正式编译和发布 |
 
-推荐先自动生成候选版，由用户完成设备测试后再作为日常版本。编译成功不能证明 Wi-Fi 160MHz、NSS 加速或代理/Docker 共存的运行表现。
+更新工作流没有 make、defconfig、编译工作流调用或 Release 发布步骤。编译工作流没有 push、schedule、workflow_run 或 repository_dispatch 触发器。只有用户需要新固件并手动发起时才编译。
 
-## 当前事实与迁移前提
+## 自动更新如何选择版本
 
-| 项目 | 已核对的情况 |
-| --- | --- |
-| 本项目已发布源码 | `VIKINGYFY/immortalwrt`，`main`，`0fb9b10cb9df51fb076470e1dd93d1c30dd89d83` |
-| 本项目构建入口 | 手动触发 `ATHENA.yml`，分别运行 preview 和正式构建；另有编辑该入口文件时的预检触发 |
-| 版本固定方式 | `build.lock.tsv` 固定源码、feeds、插件和 Mihomo；只重复运行 workflow 不会自动追上新版本 |
-| 最新对应上游发布 | [IPQ60XX-WIFI-YES-VIKINGYFY-owrt-26.10.19-07.29.05](https://github.com/VIKINGYFY/OpenWRT-CI/releases/tag/IPQ60XX-WIFI-YES-VIKINGYFY-owrt-26.10.19-07.29.05) |
-| 该发布记录的源码 | `VIKINGYFY/immortalwrt`，`owrt`，`2e285cda3da4680a2b7e5c798df037b4fdaa6fc1`，内核 `6.18.55` |
-| 对应编译框架 | 检查时 `VIKINGYFY/OpenWRT-CI` 的 `QCA-ALL.yml` 使用 `owrt`；框架 main 为 `5a77a388c8fe91c894f3e97618e9f997b57c4fba` |
+策略集中在 [Config/UPSTREAM-SOURCE.json](../Config/UPSTREAM-SOURCE.json)，实现为 [Scripts/Athena-sources.mjs](../Scripts/Athena-sources.mjs)，仅使用 Node.js 标准库。
 
-上游已经改变分支选择，首次迁移必须核对源码、设备/GENERAL 配置、Handles/Settings、feeds 和插件获取方式的兼容性。新源码的 feeds 定义还出现了 `pon_drivers`、`pon_userspace`，需要按实际使用和依赖决定处理方式；当前锁文件没有这两项，锁覆盖检查必须同时更新，不能让新 feed 未锁定就进入构建。
+1. 查询 `VIKINGYFY/OpenWRT-CI` 的 Releases，筛选非草稿、非 prerelease 的 `IPQ60XX-WIFI-YES-VIKINGYFY-*` 平台发布；分页寻找对应平台，按发布时间选择最新记录。
+2. 要求发布包含非空配置、RE-CS-02 Factory 和 Sysupgrade 资产。从来源字段读取唯一的源码仓库、分支和完整 SHA；不使用属于编译框架仓库的 `target_commitish` 代替源码提交。
+3. 验证源码为 `VIKINGYFY/immortalwrt`、分支符合 `owrt` 白名单、提交存在且属于该分支。相同分支拒绝源码回退和分叉；已记录的发布时间也不能倒退。
+4. 如果锁定的源码和分支没有变化，立即结束，保留已有 feed 锁，避免重复发布或每日依赖漂移造成无意义提交。
+5. 从固定源码提交读取 `feeds.conf.default`。按允许的 GitHub 仓库解析每个启用的 git feed，固定其声明分支/提交或默认 HEAD。未知源类型、未知 feed、地址变化、重复声明和无法解析的提交均停止更新。
+6. 所有请求和检查成功后，仅写入 `build.lock.tsv` 的 source/feed 条目及 `sources/upstream.json`；原 package/binary 锁逐项保留。来源记录包含上游 Release、源码和 feed 提交、解析时间、锁摘要及更新时的框架提交。
+7. GitHub bot 仅提交上述两个文件。使用普通 push，遇到并发更新造成非快进时失败停止，不强推、不覆盖用户改动。
 
-本次分析保持已验证的版本锁和底层配置。迁移到 `owrt` 应作为单独的候选版本增量完成，不能仅将旧 `main` 的固定 SHA 替换成“最新提交”。
+本仓库保存编译配置和版本锁，完整源码在手动编译时由 GitHub runner 拉取。更新任务不会把整个上游源码镜像进本仓库。
 
-## 建议的自动更新流程
+## main → owrt 的首次来源更新
 
-1. **定时检查平台发布。** 使用 GitHub Actions `schedule` 加手动入口。建议每天北京时间 11:20 检查一次；无新版本时立即结束。该时间是建议值，当前没有创建计划。
-2. **准确选择上游。** 查询 `VIKINGYFY/OpenWRT-CI` 的 Releases，过滤非草稿、非预发布、`IPQ60XX-WIFI-YES`、允许的源码仓库/分支，并要求存在 `jdcloud_re-cs-02` 镜像和配置。不要只读 `/releases/latest`，它可能属于其他平台。分支白名单应在首次 `owrt` 兼容性验证后再调整。
-3. **提取并校验来源。** 从该平台 Release 的来源记录读取源码仓库、分支及完整 SHA，与 GitHub 上实际提交核对。Release 的 `target_commitish` 属于编译框架仓库，不能当作固件源码提交。来源缺失、分支突然变化或发布资产不完整时停止并记录原因。
-4. **生成候选版本锁。** 保存上游 Release ID/标签、源码提交、框架基线、设备配置摘要、实际 feeds/插件提交、二进制校验和及本项目 overlay 摘要。依据候选源码声明的 feed 地址和分支解析固定提交，逐项检查锁覆盖。自定义插件仍独立锁定，变更和兼容性理由写入更新记录。上游发布未提供的依赖提交只能记录为本次解析值，不能宣称与上游原构建完全一致。
-5. **在更新分支上预检。** 比较上游框架/配置与本地基线，保留 OpenClash、PassWall2、Docker、Lucky 等自定义应用。核对 RE-CS-02、IPQ6018/QCN9074、NSS、USB/eMMC、LuCI/Firewall、代理核心和 Rust 消费包。受保护配置必须与同一候选源码下的作者配置匹配。不得自动修补 NSS、无线、DTS、内核或 PHY 来绕过失败。
-6. **预检通过后正式编译。** 使用同一候选提交和输入指纹串行运行两个编译阶段。保存完整检查点；沿用时间/空间保护。同一版本只启动一次构建，已在构建中的版本不重复排队，失败版本不每次检查都无限重试。
-7. **检查并发布候选固件。** 保留实际镜像、包数据库、`.config`、来源锁、manifest、镜像检查结果和 SHA-256。候选构建成功后发布独立的 prerelease，不覆盖已有发布和标签；失败时保存诊断，发布上传问题优先补发原产物。
-8. **实机验证后确认日常版本。** 手动升级并核对有线、80/160MHz、长时间运行、NSS、两套代理分别运行及 Docker。确认后再合并候选版本锁、发布为日常版本，保留上一版下载和恢复路径。
+已发布双代理镜像采用旧 `main` 提交 `0fb9b10cb9df51fb076470e1dd93d1c30dd89d83`。实现保留对这个确切旧来源的识别，允许首次更新到当前白名单内的 `owrt` 平台发布；其他分支变化需修改策略并审查。
 
-## 实施时需要补充的机制
+截至实施时，对应上游为 [IPQ60XX-WIFI-YES-VIKINGYFY-owrt-26.10.19-07.29.05](https://github.com/VIKINGYFY/OpenWRT-CI/releases/tag/IPQ60XX-WIFI-YES-VIKINGYFY-owrt-26.10.19-07.29.05)，源码 `2e285cda3da4680a2b7e5c798df037b4fdaa6fc1`。其 feed 定义增加了 `pon_drivers` 和 `pon_userspace`，策略明确允许并锁定这两项。
 
-- 新增检查脚本、候选版本来源记录及更新分支/PR 管理。来源字段按允许值处理，不把上游 Release 文本作为 shell 代码执行。
-- 扩展现有构建流程，串联 preview 与正式构建，并为候选发布增加明确的 prerelease 通道。目前手动正式构建会直接发布普通 Release，尚不能直接充当上述候选流程。
-- 自动生成提交/PR 后显式调用 `workflow_dispatch` 或可复用工作流；使用默认 `GITHUB_TOKEN` 的普通 push 通常不会再次触发其他 workflow，不能只依赖现有 push 事件。参考 [GitHub 工作流触发规则](https://docs.github.com/en/actions/how-tos/writing-workflows/choosing-when-your-workflow-runs/triggering-a-workflow#triggering-a-workflow-from-a-workflow)。
-- 检查/编译尽量使用只读权限，将写 Release/PR 的权限限定到需要的任务；不在固件中存入订阅、节点或账号密钥。
-- 将构建输入与通过预检的提交绑定，拒绝跨候选版本复用检查点；构建中的 main 更新不改变已启动候选的来源。
+首次自动更新只表示元数据与锁完整性验证通过，不表示 `owrt` 已通过固件编译或真机验收。现有作者设备配置、GENERAL、Handles/Settings、NSS/无线/DTS/驱动以及定制应用不由更新任务改写。框架和新源码的兼容性留到用户手动预检时验证；遇到失败应先排查，不自动修补底层绕过。
 
-## 计划运行的实际限制
+## 手动编译时的保护
 
-GitHub 的定时任务在高负载时可能延迟，公开仓库连续 60 天无活动也可能自动停用 schedule。因此应保留手动入口和失败/停用后的恢复说明。定时检查不需要每次都修改仓库来制造活动。依据：[GitHub schedule 文档](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)。
+- 从该次 workflow 固定的 Git 提交读取锁和来源记录；记录摘要或源码信息与锁不符时拒绝继续。
+- 编译框架从锁读取源码仓库/分支，不再将 `main` 硬编码到构建参数。
+- feeds 更新前要求每个启用的 feed 与锁一一匹配，并写为固定 SHA；缺项、多项和地址不符都会停止，避免新 feed 未锁定就被拉取。
+- source/feed 策略、来源记录、配置和脚本均加入检查点输入指纹，禁止跨版本恢复。
+- 保留真实 defconfig、作者受保护配置对比、必需应用检查、无有效 Rust host 依赖检查和实际镜像验证；保持原分阶段编译及时间/空间保护。
+- 构建时保存 `source-policy.json` 和 `upstream-source.json`，与最终配置、镜像及 SHA256SUMS 一起交付。
 
-自动构建只负责提供新的候选固件。是否替换日常版本应以设备测试为准。
+编译/镜像通过仍不替代真机的 80/160MHz、NSS、长时间运行、两套代理分别运行及 Docker 测试。
+
+## 手动检查和异常恢复
+
+打开 Update Sources，默认 `dry_run=true` 只生成报告；选择 false 才提交来源更新。报告和建议锁在该次 Actions 的 `athena-source-update-*` artifact 中，保留 14 天。没有更新时不会制造时间戳提交。
+
+出现网络、来源、分支或 feed 校验失败时，任务失败且不提交更新；修正问题后可手动重跑检查。遇到 GitHub 分支保护禁止 bot 写入时，任务会报告 push 错误，需要按仓库实际规则处理。
+
+GitHub 定时任务可能延迟，公开仓库连续 60 天无活动可能自动停用，因此保留手动入口。无需本地程序常驻。依据：[GitHub schedule 文档](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)。

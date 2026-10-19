@@ -1,0 +1,19 @@
+{
+  "release_repository": "VIKINGYFY/OpenWRT-CI",
+  "source_repository": "VIKINGYFY/immortalwrt",
+  "release_prefix": "IPQ60XX-WIFI-YES-VIKINGYFY-",
+  "allowed_branches": ["owrt"],
+  "legacy_source": {
+    "branch": "main",
+    "commit": "0fb9b10cb9df51fb076470e1dd93d1c30dd89d83"
+  },
+  "feed_repositories": {
+    "packages": "https://github.com/immortalwrt/packages.git",
+    "luci": "https://github.com/immortalwrt/luci.git",
+    "routing": "https://github.com/openwrt/routing.git",
+    "telephony": "https://github.com/openwrt/telephony.git",
+    "video": "https://github.com/openwrt/video.git",
+    "pon_drivers": "https://github.com/pbs05/openwrt-pon-drivers.git",
+    "pon_userspace": "https://github.com/pbs05/openwrt-pon-userspace.git"
+  }
+}

@@ -12,7 +12,9 @@ input_hash() {
     (
         cd "$task_root"
         sha256sum build.lock.tsv Config/*.txt Scripts/Packages.sh Scripts/Handles.sh \
-            Scripts/Settings.sh Scripts/Athena-prepare.sh Scripts/Athena-config.sh
+            Scripts/Settings.sh Scripts/Athena-prepare.sh Scripts/Athena-config.sh \
+            Scripts/Athena-sources.mjs Config/UPSTREAM-SOURCE.json
+        if [[ -f sources/upstream.json ]]; then sha256sum sources/upstream.json; fi
         printf '%s\n' "$WRT_CONFIG" "$WRT_THEME" "$WRT_NAME" "$WRT_SSID" "$WRT_WORD" \
             "$WRT_IP" "$WRT_PW" "$WRT_REPO" "$WRT_BRANCH" "$WRT_SOURCE" "${WRT_PACKAGE:-}"
     ) | sha256sum | cut -d' ' -f1

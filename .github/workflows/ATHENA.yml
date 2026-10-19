@@ -1,9 +1,6 @@
-name: Athena VIKINGYFY
-run-name: Athena B - ${{ (github.event_name != 'workflow_dispatch' || inputs.preview) && 'defconfig preview' || 'firmware build' }}
+name: Athena Build Firmware
+run-name: Athena - ${{ inputs.preview && 'defconfig preview' || 'firmware build' }}
 on:
-  push:
-    paths:
-      - '.github/workflows/ATHENA.yml'
   workflow_dispatch:
     inputs:
       preview:
@@ -18,7 +15,26 @@ concurrency:
   group: athena-b-${{ github.ref }}
   cancel-in-progress: false
 jobs:
+  source:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      repo: ${{ steps.locked.outputs.repo }}
+      name: ${{ steps.locked.outputs.name }}
+      branch: ${{ steps.locked.outputs.branch }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+      - name: Validate locked source provenance
+        id: locked
+        run: node Scripts/Athena-sources.mjs --resolve-build
   toolchain:
+    needs: source
     uses: ./.github/workflows/WRT-CORE.yml
     with:
       WRT_CONFIG: IPQ60XX-WIFI-YES
@@ -28,13 +44,13 @@ jobs:
       WRT_WORD: '12345678'
       WRT_IP: 192.168.10.1
       WRT_PW: 无
-      WRT_REPO: https://github.com/VIKINGYFY/immortalwrt.git
-      WRT_BRANCH: main
-      WRT_SOURCE: VIKINGYFY/immortalwrt
+      WRT_REPO: ${{ needs.source.outputs.repo }}
+      WRT_BRANCH: ${{ needs.source.outputs.branch }}
+      WRT_SOURCE: ${{ needs.source.outputs.name }}
       WRT_STAGE: toolchain
-      WRT_TEST: ${{ github.event_name != 'workflow_dispatch' || inputs.preview }}
+      WRT_TEST: ${{ inputs.preview }}
   athena:
-    needs: toolchain
+    needs: [source, toolchain]
     uses: ./.github/workflows/WRT-CORE.yml
     with:
       WRT_CONFIG: IPQ60XX-WIFI-YES
@@ -44,9 +60,9 @@ jobs:
       WRT_WORD: '12345678'
       WRT_IP: 192.168.10.1
       WRT_PW: 无
-      WRT_REPO: https://github.com/VIKINGYFY/immortalwrt.git
-      WRT_BRANCH: main
-      WRT_SOURCE: VIKINGYFY/immortalwrt
+      WRT_REPO: ${{ needs.source.outputs.repo }}
+      WRT_BRANCH: ${{ needs.source.outputs.branch }}
+      WRT_SOURCE: ${{ needs.source.outputs.name }}
       WRT_STAGE: firmware
       WRT_CHECKPOINT_STAGE: toolchain
-      WRT_TEST: ${{ github.event_name != 'workflow_dispatch' || inputs.preview }}
+      WRT_TEST: ${{ inputs.preview }}

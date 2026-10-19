@@ -1,6 +1,6 @@
 # Athena-ImmortalWrt 来源与应用调整
 
-2026-10-19 仓库由 Athena-VIKINGYFY 更名为 Athena-ImmortalWrt。历史文档中的 B 版指本项目；此次更名不改变以下已锁定来源和配置。最新上游分支变化及自动更新建议见 [UPSTREAM_UPDATES.md](UPSTREAM_UPDATES.md)。
+2026-10-19 仓库由 Athena-VIKINGYFY 更名为 Athena-ImmortalWrt。历史文档中的 B 版指本项目。下文记录已经发布固件的原始基线；现行源码/feed 锁由自动来源更新任务维护，来源更新不等于编译或设备验证完成。实际最新来源见 build.lock.tsv 与 sources/upstream.json，策略见 [UPSTREAM_UPDATES.md](UPSTREAM_UPDATES.md)。
 
 检查日期：2026-10-05（Asia/Shanghai）。
 
@@ -21,7 +21,7 @@
 ## 构建流程差异
 
 - 上游其他平台与清理工作流移至 `docs/upstream-workflows/` 存档，避免新仓库自动批量构建或自动清除发布记录。
-- 只启用手动 `Athena VIKINGYFY` 工作流；默认运行配置预检。
+- 固件入口为仅手动触发的 `Athena Build Firmware`，默认运行配置预检；独立 `Athena Update Sources` 定时维护来源锁，不调用编译或 defconfig。
 - 使用原 WRT-CORE 的环境、feeds、插件、设置和编译顺序，加入锁定、配置对比和交付检查。
 - 上游初始化仍使用其公开环境安装脚本；提交锁定保证源配置复现，不承诺不同构建时间产生逐字节一致的镜像。
 - 不调用原先删除 packages/buildinfo 后打包的方法。保存最终配置、作者基线、应用差异、受保护配置差异、锁文件、实际 feed 提交、源码变更摘要、Factory/Sysupgrade、manifest、packages、buildinfo、profiles.json、SHA256SUMS。

@@ -3,12 +3,13 @@ set -euo pipefail
 task_root="${GITHUB_WORKSPACE:?}"
 mkdir -p "$task_root/artifacts" files/etc/uci-defaults files/etc/openclash/core
 
-# Pin every feed before invoking the original feed update/install sequence.
-while IFS=$'\t' read -r kind name url revision; do
-  [[ "$kind" == feed ]] || continue
-  sed -i "s|^src-git $name .*|src-git $name $url^$revision|" feeds.conf.default
-done < "$task_root/build.lock.tsv"
+# Refuse unpinned/new feeds before invoking the original update/install sequence.
+node "$task_root/Scripts/Athena-sources.mjs" --pin-feeds "$PWD/feeds.conf.default"
 cp feeds.conf.default "$task_root/artifacts/feeds.conf.default"
+cp "$task_root/Config/UPSTREAM-SOURCE.json" "$task_root/artifacts/source-policy.json"
+if [[ -f "$task_root/sources/upstream.json" ]]; then
+  cp "$task_root/sources/upstream.json" "$task_root/artifacts/upstream-source.json"
+fi
 
 cat > files/etc/uci-defaults/99-athena-services <<'EOF'
 #!/bin/sh
