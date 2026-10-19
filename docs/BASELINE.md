@@ -1,4 +1,6 @@
-# B版来源与应用调整
+# Athena-ImmortalWrt 来源与应用调整
+
+2026-10-19 仓库由 Athena-VIKINGYFY 更名为 Athena-ImmortalWrt。历史文档中的 B 版指本项目；此次更名不改变以下已锁定来源和配置。最新上游分支变化及自动更新建议见 [UPSTREAM_UPDATES.md](UPSTREAM_UPDATES.md)。
 
 检查日期：2026-10-05（Asia/Shanghai）。
 

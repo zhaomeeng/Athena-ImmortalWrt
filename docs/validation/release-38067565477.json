@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-19",
+  "release_url": "https://github.com/zhaomeeng/Athena-ImmortalWrt/releases/tag/athena-b-38067565477",
+  "release_id": 409154093,
+  "published": true,
+  "source_run": 38067565477,
+  "source_run_conclusion": "success",
+  "compile_and_image_checks": "success",
+  "framework_commit": "12399279aaf81f30cae7ec1017bd955a1de17502",
+  "asset_count": 40,
+  "all_remote_asset_digests_verified": true,
+  "verification_method": "Every remote GitHub asset digest matched published SHA256SUMS; SHA256SUMS itself matched its downloaded file hash. No firmware image was downloaded again in this verification.",
+  "final_config_sha256": "bd6618a019b5b65757e572160d9db2d07d50094a5fd003edfcbbebc33bad7746",
+  "key_assets": [
+    {
+      "name": "immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin",
+      "size": 169788184,
+      "digest": "sha256:4d3f301664f0ae7808271972ef9e8d68f0df310d24baa84f0316a85468ebcb69"
+    },
+    {
+      "name": "immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin",
+      "size": 169359632,
+      "digest": "sha256:b4d311829c7dc40ce11a432ea3212978f4ae0de013b33ad97af8e2ba0305fd68"
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 3477,
+      "digest": "sha256:a3ceee3c658fc0301ffdbdc205dacaa23e879e0783ac19b30147262baf737e94"
+    }
+  ],
+  "repository_renamed_from": "zhaomeeng/Athena-VIKINGYFY",
+  "device_validation": "New PassWall2 image has no additional device-test report in this session."
+}
