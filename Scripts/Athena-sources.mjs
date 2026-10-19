@@ -30,13 +30,13 @@ export function parseFeeds(text, policy) {
   const feeds = [];
   for (const line of normalize(text).split('\n')) {
     if (!line.trim() || line.trimStart().startsWith('#')) continue;
-    const match = line.match(/^\s*src-git(?:-full)?\s+([a-z0-9_-]+)\s+(https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\.git)(?:([;^])([^\s]+))?\s*$/);
+    const match = line.match(/^\s*(src-git(?:-full)?)\s+([a-z0-9_-]+)\s+(https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\.git)(?:([;^])([^\s]+))?\s*$/);
     ensure(match, 'Unsupported active feed declaration.');
-    const [, name, url, separator, ref] = match;
+    const [, method, name, url, separator, ref] = match;
     ensure(policy.feed_repositories[name] === url, 'Unapproved feed name or repository.');
     if (separator === '^') ensure(SHA.test(ref), 'Invalid fixed feed commit.');
     if (separator === ';') ensure(/^[A-Za-z0-9_./-]+$/.test(ref) && !ref.includes('..'), 'Invalid feed ref.');
-    feeds.push({ name, url, ref: ref || 'HEAD' });
+    feeds.push({ method, name, url, ref: ref || 'HEAD' });
   }
   ensure(feeds.length > 0, 'No active source feeds.');
   ensure(new Set(feeds.map(e => e.name)).size === feeds.length, 'Duplicate source feed.');
@@ -189,7 +189,7 @@ export async function pinFeeds(root, path) {
     const lock = locks.find(e => e.name === feed.name);
     ensure(lock && lock.location === feed.url, 'Source feed has no matching repository lock.');
     if (SHA.test(feed.ref)) ensure(feed.ref === lock.revision, 'Source fixed feed commit differs from lock.');
-    pinned.set(feed.name, `src-git ${feed.name} ${feed.url}^${lock.revision}`);
+    pinned.set(feed.name, `${feed.method} ${feed.name} ${feed.url}^${lock.revision}`);
   }
   const result = normalize(text).split('\n').map(line => {
     const match = line.match(/^\s*src-git(?:-full)?\s+([a-z0-9_-]+)\s+/);

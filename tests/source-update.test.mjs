@@ -188,6 +188,16 @@ test('manual build refuses missing or additional locked feeds', async t => {
   assert.equal(await readFile(path, 'utf8'), feedsText);
 });
 
+test('manual build retains upstream full-history feed declarations', async t => {
+  const root = await fixture(t);
+  const full = feedsText.replace('src-git luci', 'src-git-full luci');
+  await applyPlan(root, await planUpdate(root, api({ feeds: full }).get));
+  const path = join(root, 'feeds.conf.default');
+  await writeFile(path, full);
+  await pinFeeds(root, path);
+  assert.match(await readFile(path, 'utf8'), /^src-git-full luci /m);
+});
+
 test('build is manual only and the update workflow cannot dispatch a build', async () => {
   const build = await readFile(join(repoRoot, '.github/workflows/ATHENA.yml'), 'utf8');
   const update = await readFile(join(repoRoot, '.github/workflows/SOURCE-UPDATE.yml'), 'utf8');
