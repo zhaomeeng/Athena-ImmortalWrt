@@ -4,7 +4,7 @@
 
 当前目标：以 Athena-ImmortalWrt 名称继续维护雅典娜定制固件，发布独立 README，明确跟随上游更新的实施前提。
 
-当前状态：GitHub 仓库已从 Athena-VIKINGYFY 更名为 [Athena-ImmortalWrt](https://github.com/zhaomeeng/Athena-ImmortalWrt)，本地 origin 已更新。README 围绕雅典娜、OpenClash/PassWall2、Docker、下载校验和构建恢复独立重写；源码锁、应用选择及构建脚本保持已验证版本。历史标签、构建编号和原始证据保留。
+当前状态：GitHub 仓库已从 Athena-VIKINGYFY 更名为 [Athena-ImmortalWrt](https://github.com/zhaomeeng/Athena-ImmortalWrt)，本地 origin 已更新。README 围绕雅典娜、OpenClash/PassWall2、Docker、下载校验和构建恢复独立重写；源码锁、应用选择及构建脚本保持已验证版本。历史标签、构建编号和原始证据保留。原 A 版远程仓库 Athena-LiBwrt 已按用户要求删除，用户完成 GitHub 身份验证后 API 核对返回 404；其本地 Git 备份保留。
 
 最新交付：[Run 38067565477](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/38067565477)（框架 1239927）工具链、固件编译、实际镜像检查、artifact 和 Release 发布全部 success。[Release athena-b-38067565477](https://github.com/zhaomeeng/Athena-ImmortalWrt/releases/tag/athena-b-38067565477) 已公开；2026-10-19 核对全部 40 个远端资产摘要与发布清单、原构建标签均一致，最终配置 SHA256 为 bd6618a019b5b65757e572160d9db2d07d50094a5fd003edfcbbebc33bad7746。见 validation/release-38067565477.json。对应预检 38066247060 两任务成功，受保护配置与 Rust 消费包列表为空。新 PassWall2 镜像尚无新增真机测试反馈。
 
