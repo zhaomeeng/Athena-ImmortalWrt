@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { releaseName, checkExistingRelease } from '../Scripts/Athena-release-name.mjs';
 
 test('release date uses Shanghai and crosses UTC midnight correctly', () => {
-  assert.equal(releaseName('2026-10-20T15:59:59Z'), 'Athena-ImmortalWrt-261020');
-  assert.equal(releaseName('2026-10-20T16:00:00Z'), 'Athena-ImmortalWrt-261021');
-  assert.equal(releaseName('2026-12-31T16:00:00Z'), 'Athena-ImmortalWrt-270101');
+  assert.equal(releaseName('2026-10-20T15:59:59Z'), 'Athena-ImmortalWrt-20261020');
+  assert.equal(releaseName('2026-10-20T16:00:00Z'), 'Athena-ImmortalWrt-20261021');
+  assert.equal(releaseName('2026-12-31T16:00:00Z'), 'Athena-ImmortalWrt-20270101');
 });
 test('invalid creation time is rejected', () => {
   assert.throws(() => releaseName('not-a-date'));

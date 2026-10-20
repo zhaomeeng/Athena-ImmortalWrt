@@ -6,7 +6,7 @@
 
 | 工作流 | 触发方式 | 执行内容 |
 | --- | --- | --- |
-| [Athena Update Sources](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/workflows/SOURCE-UPDATE.yml) | 每天北京时间 11:20；也可手动运行 | 读取上游发布元数据，更新源码/feed 版本锁与来源记录 |
+| [Athena Update Sources](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/workflows/SOURCE-UPDATE.yml) | 每天北京时间 11:20；也可手动运行 | 读取作者 main 分支提交，验证 NSS 默认声明，更新源码/feed 锁、来源记录及 README 版本 |
 | [Athena Build Firmware](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/workflows/ATHENA.yml) | 仅手动 Run workflow | 先 `preview=true` 做真实配置/恢复预检，再以相同锁运行 `preview=false` 正式编译和发布 |
 
 更新工作流没有 make、defconfig、编译工作流调用或 Release 发布步骤。编译工作流没有 push、schedule、workflow_run 或 repository_dispatch 触发器。只有用户需要新固件并手动发起时才编译。
@@ -15,24 +15,24 @@
 
 策略集中在 [Config/UPSTREAM-SOURCE.json](../Config/UPSTREAM-SOURCE.json)，实现为 [Scripts/Athena-sources.mjs](../Scripts/Athena-sources.mjs)，仅使用 Node.js 标准库。
 
-1. 查询 `VIKINGYFY/OpenWRT-CI` 的 Releases，筛选非草稿、非 prerelease 的 `IPQ60XX-WIFI-YES-VIKINGYFY-*` 平台发布；分页寻找对应平台，按发布时间选择最新记录。
-2. 要求发布包含非空配置、RE-CS-02 Factory 和 Sysupgrade 资产。从来源字段读取唯一的源码仓库、分支和完整 SHA；不使用属于编译框架仓库的 `target_commitish` 代替源码提交。
-3. 验证源码为 `VIKINGYFY/immortalwrt`、分支符合 `owrt` 白名单、提交存在且属于该分支。相同分支拒绝源码回退和分叉；已记录的发布时间也不能倒退。
+1. 仅查询 `VIKINGYFY/immortalwrt` 的 main 分支，读取完整 HEAD 提交。用户于 2026-10-21 确认保留 NSS，因此不再将 owrt 平台 Release 当作来源；源码分支提交不等于已发布固件。
+2. 要求来源仓库与 main 白名单一致，验证提交存在且属于 main；只允许确切历史 main/owrt 来源迁移到 main，后续同分支拒绝回退和分叉。未知模式或更换跟踪分支时失败，不自动切换来源。
+3. 从候选固定提交解析 qualcommax Makefile 的 DEFAULT_PACKAGES，要求实际声明 kmod-qca-nss-drv、kmod-qca-nss-ecm、kmod-qca-nss-dp；仅出现在注释中不算通过。缺少声明时停止更新。此检查不宣称模块能编译或设备硬件加速已验证，正式构建的实际 defconfig 必需 NSS 检查继续保留。
 4. 如果锁定的源码和分支没有变化，保留已有 feed 锁，避免重复发布或每日依赖漂移。已有版本元数据时直接校对 README；缺失时仅从原锁定提交补齐版本，不刷新 feed。
 5. 从固定源码提交读取 `feeds.conf.default`。按允许的 GitHub 仓库解析每个启用的 git feed，固定其声明分支/提交或默认 HEAD。未知源类型、未知 feed、地址变化、重复声明和无法解析的提交均停止更新。
 6. 从同一个固定源码提交读取 qualcommax/IPQ60xx 的内核选择、`target/linux/generic/kernel-*` 的补丁版本及 `include/version.mk` 的 ImmortalWrt 默认版本。只解析文本，不运行上游脚本；不能可靠解析时停止，不猜测版本。SNAPSHOT 如实标注为开发版本，不能将发布日期当作 ImmortalWrt 正式版本号。
-7. 所有请求和检查成功后，写入 `build.lock.tsv` 的 source/feed 条目、`sources/upstream.json` 及 README 自动版本区块；原 package/binary 锁逐项保留。来源记录包含上游 Release、源码和 feed 提交、解析时间、锁摘要、版本及其文件来源和更新时的框架提交。版本表对应待编译源码，不代表已发布或运行中的固件。
+7. 所有请求和检查成功后，写入 `build.lock.tsv` 的 source/feed 条目、`sources/upstream.json` 及 README 自动版本区块；原 package/binary 锁逐项保留。来源记录包含 main 提交链接、选择模式、源码和 feed 提交、解析时间、锁摘要、版本及其文件来源和更新时的框架提交，不伪造对应 Release。版本表对应待编译源码，不代表已发布或运行中的固件。
 8. GitHub bot 仅允许提交 `build.lock.tsv`、`sources/upstream.json`、`README.md` 三个文件；README 只替换唯一的 `ATHENA-SOURCE-VERSIONS` 标记区块，保留其余内容，标记缺失或重复时停止。使用普通 push，遇到并发更新造成非快进时失败停止，不强推、不覆盖用户改动。无变化不提交。
 
 本仓库保存编译配置和版本锁，完整源码在手动编译时由 GitHub runner 拉取。更新任务不会把整个上游源码镜像进本仓库。
 
-## main → owrt 的首次来源更新
+## 历史 owrt 迁移与回到 NSS main
 
-已发布双代理镜像采用旧 `main` 提交 `0fb9b10cb9df51fb076470e1dd93d1c30dd89d83`。实现保留对这个确切旧来源的识别，允许首次更新到当前白名单内的 `owrt` 平台发布；其他分支变化需修改策略并审查。
+已发布双代理镜像采用旧 main 提交 `0fb9b10cb9df51fb076470e1dd93d1c30dd89d83`。此前来源更新曾进入 owrt 提交 `fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503`，预检 39462311708 发现必需 NSS 缺失而停止，未生成该来源的新固件。
 
-截至实施时，对应上游为 [IPQ60XX-WIFI-YES-VIKINGYFY-owrt-26.10.19-07.29.05](https://github.com/VIKINGYFY/OpenWRT-CI/releases/tag/IPQ60XX-WIFI-YES-VIKINGYFY-owrt-26.10.19-07.29.05)，源码 `2e285cda3da4680a2b7e5c798df037b4fdaa6fc1`。其 feed 定义增加了 `pon_drivers` 和 `pon_userspace`，策略明确允许并锁定这两项。
+用户确认切回作者 main 并保留 NSS。策略识别确切旧 main 与已记录 owrt 提交，允许迁移到 main；来源更新按 main 当前启用 feed 重建锁，未启用的 pon feed 随之移除，第三方 package/binary 锁逐项保留。
 
-首次自动更新只表示元数据与锁完整性验证通过，不表示 `owrt` 已通过固件编译或真机验收。现有作者设备配置、GENERAL、Handles/Settings、NSS/无线/DTS/驱动以及定制应用不由更新任务改写。框架和新源码的兼容性留到用户手动预检时验证；遇到失败应先排查，不自动修补底层绕过。
+自动更新只表示元数据与锁完整性验证通过，不表示新 main 已通过固件编译或真机验收。现有作者设备配置、GENERAL、Handles/Settings、NSS/无线/DTS/驱动以及定制应用不由更新任务改写。框架和新源码的兼容性留到手动构建的配置预检中验证；失败即停止，不绕过底层检查。
 
 ## 手动编译时的保护
 

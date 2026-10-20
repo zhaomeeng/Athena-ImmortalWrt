@@ -7,7 +7,9 @@ import { fileURLToPath } from 'node:url';
 import { parseLock, parseFeeds, parseRelease, loadInputs, planUpdate, applyPlan, pinFeeds, formatJson, resolveVersions, renderVersionReadme } from '../Scripts/Athena-sources.mjs';
 
 const repoRoot = fileURLToPath(new URL('../', import.meta.url));
-const policy = JSON.parse(await readFile(join(repoRoot, 'Config/UPSTREAM-SOURCE.json'), 'utf8'));
+const productionPolicy = JSON.parse(await readFile(join(repoRoot, 'Config/UPSTREAM-SOURCE.json'), 'utf8'));
+// Retain release-mode regression fixtures for historical provenance support.
+const policy = { ...productionPolicy, update_mode: 'release', allowed_branches: ['owrt'] };
 const OLD = policy.legacy_source.commit;
 const NEW = '2'.repeat(40);
 const FEED = '3'.repeat(40);
@@ -292,4 +294,63 @@ test('source runtime is installed after hosted tool cache cleanup', async () => 
   const core = await readFile(join(repoRoot, '.github/workflows/WRT-CORE.yml'), 'utf8');
   assert.ok(core.indexOf('Set up source validation runtime') > core.indexOf('Reclaim hosted runner disk space'));
   assert.ok(core.indexOf('Set up source validation runtime') < core.indexOf('Prepare Athena locked sources and service defaults'));
+});
+
+function mainApi({ head = NEW, nss = true, comparison = 'ahead' } = {}) {
+  const mock = api({ branchHead: head, comparison });
+  const calls = [];
+  return { calls, get: async path => {
+    calls.push(path);
+    if (path.endsWith('/branches/main')) return { commit: { sha: head } };
+    if (path.includes('/contents/target/linux/qualcommax/Makefile?')) {
+      const packages = productionPolicy.required_target_packages.join(' \\\n  ');
+      const text = `KERNEL_PATCHVER:=6.18\n${nss ? 'DEFAULT_PACKAGES +=' : '# DEFAULT_PACKAGES +='} ${packages}\n`;
+      return { type: 'file', encoding: 'base64', content: Buffer.from(text).toString('base64') };
+    }
+    return mock.get(path);
+  } };
+}
+
+test('main tracking ignores owrt releases, validates NSS and is idempotent', async t => {
+  const root = await fixture(t);
+  await writeFile(join(root, 'Config/UPSTREAM-SOURCE.json'), formatJson(productionPolicy));
+  const mock = mainApi();
+  const plan = await planUpdate(root, mock.get);
+  assert.equal(plan.source.branch, 'main');
+  assert.equal(plan.source.selection, 'branch-head');
+  assert.match(plan.readmeText, /保留 NSS/);
+  assert.equal(mock.calls.some(p => p.includes('/releases?')), false);
+  assert.deepEqual(parseLock(plan.lockText).filter(e => ['package', 'binary'].includes(e.kind)), parseLock(initialLock()).filter(e => ['package', 'binary'].includes(e.kind)));
+  await applyPlan(root, plan);
+  assert.equal((await planUpdate(root, mainApi().get)).changed, false);
+});
+
+test('main tracking refuses NSS declared only in comments before writing any input', async t => {
+  const root = await fixture(t);
+  await writeFile(join(root, 'Config/UPSTREAM-SOURCE.json'), formatJson(productionPolicy));
+  await assert.rejects(planUpdate(root, mainApi({ nss: false }).get), /NSS target default missing/);
+  assert.equal(await readFile(join(root, 'build.lock.tsv'), 'utf8'), initialLock());
+  await assert.rejects(readFile(join(root, 'sources/upstream.json')), { code: 'ENOENT' });
+});
+
+test('main source tracking refuses rollback and switching back to owrt', async t => {
+  const root = await fixture(t);
+  await writeFile(join(root, 'Config/UPSTREAM-SOURCE.json'), formatJson(productionPolicy));
+  await assert.rejects(planUpdate(root, mainApi({ comparison: 'behind' }).get), /roll back/);
+  await writeFile(join(root, 'Config/UPSTREAM-SOURCE.json'), formatJson({ ...productionPolicy, tracking_branch: 'owrt' }));
+  await assert.rejects(planUpdate(root, mainApi().get), /approved NSS main/);
+});
+
+test('only the approved owrt migration commit may enter main tracking', async t => {
+  const root = await fixture(t);
+  await writeFile(join(root, 'Config/UPSTREAM-SOURCE.json'), formatJson(productionPolicy));
+  const migration = productionPolicy.migration_sources[0];
+  const oldLock = initialLock().replace(`\tmain\t${OLD}`, `\t${migration.branch}\t${migration.commit}`);
+  const { digest } = await import('../Scripts/Athena-sources.mjs');
+  await mkdir(join(root, 'sources'));
+  await writeFile(join(root, 'build.lock.tsv'), oldLock);
+  await writeFile(join(root, 'sources/upstream.json'), formatJson({ source: { repository: policy.source_repository, ...migration }, build_lock_sha256: digest(oldLock) }));
+  assert.equal((await planUpdate(root, mainApi().get)).source.branch, 'main');
+  await writeFile(join(root, 'build.lock.tsv'), oldLock.replace(migration.commit, '9'.repeat(40)));
+  await assert.rejects(loadInputs(root), /not approved/);
 });

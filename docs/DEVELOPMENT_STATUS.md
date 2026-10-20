@@ -4,11 +4,11 @@
 
 当前目标：自动维护上游源码和必要 feed 版本锁，仅由用户手动发起配置预检与固件编译。
 
-本轮用户授权：后续 Release 名称/标签及最终固件 artifact 改为 Athena-ImmortalWrt-yymmdd，并启动一次新固件编译。日期按任务创建时北京时间固定，同日已有其他 Run 发布时拒绝覆盖；历史发布与内部检查点名称保留。命名及来源测试共 41 项通过，actionlint 和差异检查通过。当前先启动新 owrt 来源的配置预检，通过后继续正式编译；应用组合仍为 OpenClash + PassWall2 + Docker，默认关闭。
+本轮用户最新确认：切回作者 main 并保留 NSS，修正自动来源更新策略；Release 名称/标签及最终 artifact 使用 Athena-ImmortalWrt-yyyymmdd（例 Athena-ImmortalWrt-20261021），按任务创建时北京时间固定，同日不覆盖其他 Run。源码锁已迁移到 main / f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49，内核 6.18.55，ImmortalWrt SNAPSHOT，启用 5 个 feed；自定义 package/binary 锁和应用配置保持不变。45 项测试及真实来源更新/重复 dry-run 通过，无重复变更。接下来按用户授权启动正式任务，任务内先执行实际 defconfig/NSS/应用保护检查，通过才编译。
 
 首次预检 39460712170：来源和日期命名校验成功，因未选用的 lmq8267/luci-app-vnt 仓库返回 404，在 Custom Packages 下载阶段停止；尚未执行 defconfig 或编译。已逐项检查 40 个自定义包锁，其余 39 个锁定提交可访问。修复仅跳过未选用 VNT 的下载，保留历史锁和应用/底层配置，随后重新预检。
 
-当前阻塞：修复后的预检 39462311708 已生成配置，protected.diff 为空，OpenClash/PassWall2/Xray/Sing-box/Docker 均选中，但必需 kmod-qca-nss-drv 未选中而失败。锁定 owrt 源码的作者目标默认包不含 NSS；当前 main 提交 f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49 的目标默认包包含 NSS drv/ecm/dp，内核同为 6.18.55。尚未放宽 NSS 检查、变更来源或启动正式编译；等待用户确认切换 main 并修正更新策略，或明确接受无 NSS 的 owrt。命名修改已交付，旧 Release 保留；详见 validation/preview-39462311708.json。
+历史阻塞（用户已确认切 main，来源修复已实施）：修复后的预检 39462311708 已生成配置，protected.diff 为空，OpenClash/PassWall2/Xray/Sing-box/Docker 均选中，但必需 kmod-qca-nss-drv 未选中而失败。锁定 owrt 源码的作者目标默认包不含 NSS；当前 main 提交 f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49 的目标默认包包含 NSS drv/ecm/dp，内核同为 6.18.55。用户随后确认 main + NSS，已更新策略与来源锁，NSS 检查保持；正式编译状态见本轮运行记录。命名修改已交付，旧 Release 保留；详见 validation/preview-39462311708.json。
 
 仓库可见性：2026-10-21 按用户要求改为 Private，API 已确认 isPrivate=true；Actions enabled=true，来源更新工作流 active，每日 11:20 的 cron 未变。私有化后 [39459455766](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39459455766) 成功，当前来源无变化而跳过提交；未触发固件编译。未来计划触发尚待下一次定时窗口，执行受私有 Actions 额度及预算限制，见 UPSTREAM_UPDATES.md。
 
@@ -20,7 +20,7 @@
 
 保持：应用 overlay、作者设备/GENERAL 配置、Handles/Settings、第三方插件及二进制锁保持不变。源码和 feed 锁由更新任务维护，以 build.lock.tsv 与 sources/upstream.json 为准；原 0fb9b10 只代表已发布固件的来源。PassWall 1 不选中；PassWall2 的可选 Shadowsocks Rust 和 Ruby YJIT 关闭，手动预检仍要求有效 Rust host 消费包为空。两套代理和 Docker 默认关闭，按需切换。
 
-构建策略：Public Ubuntu 24.04 runner 清理、原生 AUTOREMOVE、1G ccache 和磁盘保护；工具链/内核、最终固件两个串行任务，各段编译最多四小时。工具链完整源树检查点保留三天，支持同 Run 限时续编，最终固件拒绝未完成状态。新配置不复用旧 Run 或预检检查点。
+构建策略：GitHub-hosted Ubuntu 24.04 runner 清理、原生 AUTOREMOVE、1G ccache 和磁盘保护；工具链/内核、最终固件两个串行任务，各段编译最多四小时。工具链完整源树检查点保留三天，支持同 Run 限时续编，最终固件拒绝未完成状态。新配置不复用旧 Run 或预检检查点。
 
 上一版交付：[Run 37397400157](https://github.com/zhaomeeng/Athena-VIKINGYFY/actions/runs/37397400157) 编译/镜像检查成功，[Release athena-b-37397400157](https://github.com/zhaomeeng/Athena-VIKINGYFY/releases/tag/athena-b-37397400157) 已公开，38 个资产摘要与原构建标签已核对，见 validation/release-37397400157.json。用户随后反馈 A/B 均能正常使用；该反馈对应之前无 PassWall2 的镜像，新组合仍需单独设备验证。
 
@@ -28,7 +28,7 @@
 
 已知事项：Windows 无可用 WSL 发行版，实际 defconfig/编译在 GitHub Ubuntu runner 执行。最终固件任务失败时从完整工具链检查点重新执行，不复用半成品签名材料。
 
-更新边界：首次来源更新允许从确切旧 main 基线进入作者现用 owrt 发布，补齐 pon_drivers/pon_userspace 等启用 feed 的锁；这只验证来源元数据，不宣称新源码已通过编译。未知分支/feed、回退、来源记录不符时停止。细节见 UPSTREAM_UPDATES.md。
+更新边界：仅跟踪作者 main，先检查目标 NSS 默认包，再维护 source/feed 锁与版本表；允许确切旧 main/owrt 来源迁移，不再选择 owrt 发布。此阶段不编译；缺少 NSS 声明、未知 feed、回退或分叉时停止。细节见 UPSTREAM_UPDATES.md。
 
 下一步：按计划自动维护来源锁；需要新固件时由用户手动发起 Build Firmware，先运行配置预检，再正式编译并核对新来源的真实兼容性和设备表现。本轮未发起预检或固件编译，新 owrt 来源尚未经过本项目实际编译或设备验证。
 

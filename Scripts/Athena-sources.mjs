@@ -45,7 +45,10 @@ export function renderVersionReadme(text, source, versions) {
   const normalized = normalize(text);
   ensure(normalized.split(start).length === 2 && normalized.split(end).length === 2 && normalized.indexOf(end) > normalized.indexOf(start), 'Missing or ambiguous README version markers.');
   const base = `https://github.com/${source.repository}/blob/${source.commit}`;
-  const block = `${start}\n## 当前待编译源码版本\n\n| 项目 | 锁定版本 |\n| --- | --- |\n| ImmortalWrt | **${versions.immortalwrt}**（源码默认版本） |\n| Linux 内核 | **${versions.kernel}** |\n| 源码分支 | \`${source.branch}\` |\n| 源码提交 | [\`${source.commit.slice(0, 12)}\`](https://github.com/${source.repository}/commit/${source.commit}) |\n| 对应上游发布 | [${source.release_tag}](${source.release_url}) |\n\n版本随源码更新任务自动维护，读取固定提交的 [版本声明](${base}/include/version.mk) 与 [内核版本文件](${base}/${versions.files[2]})。以上对应待编译源码，尚不代表本仓库已发布固件或路由器运行版本；SNAPSHOT 表示开发版本，具体来源以提交为准。\n${end}`;
+  const origin = source.selection === 'branch-head'
+    ? `| 更新来源 | 作者 \`${source.branch}\` 分支固定提交（保留 NSS） |`
+    : `| 对应上游发布 | [${source.release_tag}](${source.release_url}) |`;
+  const block = `${start}\n## 当前待编译源码版本\n\n| 项目 | 锁定版本 |\n| --- | --- |\n| ImmortalWrt | **${versions.immortalwrt}**（源码默认版本） |\n| Linux 内核 | **${versions.kernel}** |\n| 源码分支 | \`${source.branch}\` |\n| 源码提交 | [\`${source.commit.slice(0, 12)}\`](https://github.com/${source.repository}/commit/${source.commit}) |\n${origin}\n\n版本随源码更新任务自动维护，读取固定提交的 [版本声明](${base}/include/version.mk) 与 [内核版本文件](${base}/${versions.files[2]})。以上对应待编译源码，尚不代表本仓库已发布固件或路由器运行版本；SNAPSHOT 表示开发版本，具体来源以提交为准。\n${end}`;
   return normalized.slice(0, normalized.indexOf(start)) + block + normalized.slice(normalized.indexOf(end) + end.length);
 }
 
@@ -120,7 +123,8 @@ export async function loadInputs(root) {
   const source = entries.find(e => e.kind === 'source');
   ensure(source.name === policy.source_repository, 'Current source does not match policy.');
   const legacy = source.location === policy.legacy_source.branch && source.revision === policy.legacy_source.commit;
-  ensure(legacy || policy.allowed_branches.includes(source.location), 'Current source branch is not approved.');
+  const migration = (policy.migration_sources || []).some(s => s.branch === source.location && s.commit === source.revision);
+  ensure(legacy || migration || policy.allowed_branches.includes(source.location), 'Current source branch is not approved.');
   let provenance;
   try { provenance = json(await readFile(join(root, 'sources/upstream.json'), 'utf8')); }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
@@ -156,7 +160,16 @@ export function githubClient(token = process.env.GH_TOKEN) {
 export async function planUpdate(root, get = githubClient(), now = new Date().toISOString()) {
   const input = await loadInputs(root);
   const { policy, source, entries, lockText, provenance } = input;
-  let releases = [];
+  let candidate;
+  if (policy.update_mode === 'branch-head') {
+    ensure(policy.tracking_branch === 'main' && policy.allowed_branches.length === 1 && policy.allowed_branches[0] === 'main', 'Branch tracking must stay on approved NSS main.');
+    const head = await get(`/repos/${policy.source_repository}/branches/${policy.tracking_branch}`);
+    ensure(SHA.test(head.commit?.sha || ''), 'Invalid source branch response.');
+    candidate = { repository: policy.source_repository, branch: policy.tracking_branch, commit: head.commit.sha,
+      selection: 'branch-head', source_url: `https://github.com/${policy.source_repository}/commit/${head.commit.sha}` };
+  } else {
+    ensure(!policy.update_mode || policy.update_mode === 'release', 'Unknown source update mode.');
+    let releases = [];
   for (let page = 1; page <= 5; page++) {
     const items = await get(`/repos/${policy.release_repository}/releases?per_page=100&page=${page}`);
     ensure(Array.isArray(items), 'Invalid releases response.');
@@ -166,8 +179,9 @@ export async function planUpdate(root, get = githubClient(), now = new Date().to
   ensure(releases.length > 0, 'No matching platform release found.');
   ensure(releases.every(r => Number.isFinite(Date.parse(r.published_at))), 'Invalid release publication time.');
   releases.sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at) || b.id - a.id);
-  const candidate = parseRelease(releases[0], policy);
+  candidate = parseRelease(releases[0], policy);
   if (provenance) ensure(Date.parse(candidate.published_at) >= Date.parse(provenance.source.published_at), 'Upstream publication moved backwards.');
+  }
   if (source.location === candidate.branch && source.revision === candidate.commit) {
     const versions = provenance?.versions || await resolveVersions(get, candidate);
     const record = { ...provenance, versions };
@@ -188,6 +202,13 @@ export async function planUpdate(root, get = githubClient(), now = new Date().to
   if (source.location === candidate.branch) {
     const comparison = await get(`/repos/${policy.source_repository}/compare/${source.revision}...${candidate.commit}`);
     ensure(comparison.status === 'ahead', 'Source update would roll back or diverge.');
+  }
+  if (policy.update_mode === 'branch-head') {
+    const target = await sourceFile(get, policy.source_repository, candidate.commit, 'target/linux/qualcommax/Makefile');
+    const defaults = [...normalize(target).replace(/#[^\n]*/g, '').replace(/\\\n/g, ' ').matchAll(/^DEFAULT_PACKAGES\s*\+=([^\n]*)/gm)]
+      .flatMap(match => match[1].trim().split(/\s+/));
+    ensure(Array.isArray(policy.required_target_packages) && policy.required_target_packages.includes('kmod-qca-nss-drv') && policy.required_target_packages.includes('kmod-qca-nss-ecm') && policy.required_target_packages.includes('kmod-qca-nss-dp'), 'Missing NSS source policy.');
+    for (const name of policy.required_target_packages) ensure(defaults.includes(name), `Required NSS target default missing: ${name}`);
   }
   const contents = await get(`/repos/${policy.source_repository}/contents/feeds.conf.default?ref=${candidate.commit}`);
   ensure(contents.type === 'file' && contents.encoding === 'base64' && typeof contents.content === 'string', 'Invalid feed file response.');
@@ -217,7 +238,7 @@ export async function planUpdate(root, get = githubClient(), now = new Date().to
 
 export async function applyPlan(root, plan) {
   if (!plan.changed) return;
-  // All network requests and validation finish before writing either tracked file.
+  // All network requests and validation finish before writing tracked files.
   await mkdir(join(root, 'sources'), { recursive: true });
   await writeFile(join(root, 'build.lock.tsv'), plan.lockText, 'utf8');
   await writeFile(join(root, 'sources/upstream.json'), formatJson(plan.record), 'utf8');
@@ -276,7 +297,7 @@ async function main() {
   if (process.env.GITHUB_OUTPUT) await appendFile(process.env.GITHUB_OUTPUT,
     `changed=${plan.changed && !dryRun}\nsource_commit=${plan.source.commit}\n`);
   if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY,
-    `### Athena source update\n\n- Dry run: ${dryRun}\n- Changed: ${plan.changed}\n- Upstream: [${plan.source.release_tag}](${plan.source.release_url})\n- Source: \`${plan.source.commit}\`\n- Firmware: not compiled; use Build Firmware manually.\n`);
+    `### Athena source update\n\n- Dry run: ${dryRun}\n- Changed: ${plan.changed}\n- Upstream: [${plan.source.release_tag || plan.source.branch}](${plan.source.release_url || plan.source.source_url})\n- Source: \`${plan.source.commit}\`\n- Firmware: not compiled; use Build Firmware manually.\n`);
   console.log(formatJson({ dry_run: dryRun, changed: plan.changed, source: plan.source }));
 }
 

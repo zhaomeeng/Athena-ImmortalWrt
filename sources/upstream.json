@@ -2,14 +2,12 @@
   "schema_version": 1,
   "source": {
     "repository": "VIKINGYFY/immortalwrt",
-    "branch": "owrt",
-    "commit": "fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503",
-    "release_id": 417907106,
-    "release_tag": "IPQ60XX-WIFI-YES-VIKINGYFY-owrt-26.10.20-08.32.19",
-    "release_url": "https://github.com/VIKINGYFY/OpenWRT-CI/releases/tag/IPQ60XX-WIFI-YES-VIKINGYFY-owrt-26.10.20-08.32.19",
-    "published_at": "2026-10-20T01:21:23Z"
+    "branch": "main",
+    "commit": "f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49",
+    "selection": "branch-head",
+    "source_url": "https://github.com/VIKINGYFY/immortalwrt/commit/f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49"
   },
-  "resolved_at": "2026-10-20T08:34:05.845Z",
+  "resolved_at": "2026-10-20T17:28:54.712Z",
   "feeds": [
     {
       "method": "src-git",
@@ -45,30 +43,16 @@
       "url": "https://github.com/openwrt/video.git",
       "ref": "HEAD",
       "commit": "6917907d4d6c670cf85be525d23216595655061d"
-    },
-    {
-      "method": "src-git",
-      "name": "pon_drivers",
-      "url": "https://github.com/pbs05/openwrt-pon-drivers.git",
-      "ref": "HEAD",
-      "commit": "e5194d2dfd169eef8f4a944fdc3f929e0287b680"
-    },
-    {
-      "method": "src-git",
-      "name": "pon_userspace",
-      "url": "https://github.com/pbs05/openwrt-pon-userspace.git",
-      "ref": "HEAD",
-      "commit": "cce9d756742487b378749c606b30e13ee9b0f093"
     }
   ],
-  "build_lock_sha256": "aa449bc4f89ed6fa4b1e455da19dcfd79072f03c44df8627101f4ad82e97b51e",
+  "build_lock_sha256": "e2a7192e6e364fee5fe9d86e6f29e9e3c0493414f61b9aa4b21fc8b0cfe42c6f",
   "validation_scope": "source metadata and feed locks only; updater does not compile firmware",
   "previous_source": {
-    "branch": "main",
-    "commit": "0fb9b10cb9df51fb076470e1dd93d1c30dd89d83"
+    "branch": "owrt",
+    "commit": "fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503"
   },
   "custom_package_and_binary_locks": "retained unchanged",
-  "base_framework_commit": "fb15d79b3526a360d3cb63d4781cbbd01a847428",
+  "base_framework_commit": null,
   "versions": {
     "kernel": "6.18.55",
     "immortalwrt": "SNAPSHOT",

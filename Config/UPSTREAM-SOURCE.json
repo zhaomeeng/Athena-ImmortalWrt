@@ -2,7 +2,13 @@
   "release_repository": "VIKINGYFY/OpenWRT-CI",
   "source_repository": "VIKINGYFY/immortalwrt",
   "release_prefix": "IPQ60XX-WIFI-YES-VIKINGYFY-",
-  "allowed_branches": ["owrt"],
+  "update_mode": "branch-head",
+  "tracking_branch": "main",
+  "allowed_branches": ["main"],
+  "migration_sources": [
+    { "branch": "owrt", "commit": "fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503" }
+  ],
+  "required_target_packages": ["kmod-qca-nss-drv", "kmod-qca-nss-ecm", "kmod-qca-nss-dp"],
   "legacy_source": {
     "branch": "main",
     "commit": "0fb9b10cb9df51fb076470e1dd93d1c30dd89d83"

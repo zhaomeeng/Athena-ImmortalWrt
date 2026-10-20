@@ -13,11 +13,11 @@
 | --- | --- |
 | ImmortalWrt | **SNAPSHOT**（源码默认版本） |
 | Linux 内核 | **6.18.55** |
-| 源码分支 | `owrt` |
-| 源码提交 | [`fd7cdeefc0d6`](https://github.com/VIKINGYFY/immortalwrt/commit/fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503) |
-| 对应上游发布 | [IPQ60XX-WIFI-YES-VIKINGYFY-owrt-26.10.20-08.32.19](https://github.com/VIKINGYFY/OpenWRT-CI/releases/tag/IPQ60XX-WIFI-YES-VIKINGYFY-owrt-26.10.20-08.32.19) |
+| 源码分支 | `main` |
+| 源码提交 | [`f9b0ce7650fd`](https://github.com/VIKINGYFY/immortalwrt/commit/f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49) |
+| 更新来源 | 作者 `main` 分支固定提交（保留 NSS） |
 
-版本随源码更新任务自动维护，读取固定提交的 [版本声明](https://github.com/VIKINGYFY/immortalwrt/blob/fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503/include/version.mk) 与 [内核版本文件](https://github.com/VIKINGYFY/immortalwrt/blob/fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503/target/linux/generic/kernel-6.18)。以上对应待编译源码，尚不代表本仓库已发布固件或路由器运行版本；SNAPSHOT 表示开发版本，具体来源以提交为准。
+版本随源码更新任务自动维护，读取固定提交的 [版本声明](https://github.com/VIKINGYFY/immortalwrt/blob/f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49/include/version.mk) 与 [内核版本文件](https://github.com/VIKINGYFY/immortalwrt/blob/f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49/target/linux/generic/kernel-6.18)。以上对应待编译源码，尚不代表本仓库已发布固件或路由器运行版本；SNAPSHOT 表示开发版本，具体来源以提交为准。
 <!-- ATHENA-SOURCE-VERSIONS:END -->
 
 ## 定制特点
@@ -51,7 +51,7 @@
 
 在 [Releases](https://github.com/zhaomeeng/Athena-ImmortalWrt/releases) 下载设备名称含 **`jdcloud_re-cs-02`** 的镜像。
 
-后续 Release 名称、标签及最终固件 artifact 统一采用 **`Athena-ImmortalWrt-yymmdd`**，例如 `Athena-ImmortalWrt-261021`。日期取构建任务创建时的北京时间，跨日完成或重跑仍使用同一个名称。同一天已有其他构建发布时停止，避免覆盖；历史 `athena-b-*` Release 保留。镜像文件继续使用包含设备名称的标准文件名，内部检查点/诊断 artifact 保留原标识以保证续编兼容。
+后续 Release 名称、标签及最终固件 artifact 统一采用 **`Athena-ImmortalWrt-yyyymmdd`**，例如 `Athena-ImmortalWrt-20261021`。日期取构建任务创建时的北京时间，跨日完成或重跑仍使用同一个名称。同一天已有其他构建发布时停止，避免覆盖；历史 `athena-b-*` Release 保留。镜像文件继续使用包含设备名称的标准文件名，内部检查点/诊断 artifact 保留原标识以保证续编兼容。
 
 | 文件 | 用途 |
 | --- | --- |
@@ -82,11 +82,11 @@ Get-FileHash .\immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgra
 
 ## 自动更新来源，按需手动编译
 
-[Athena Update Sources](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/workflows/SOURCE-UPDATE.yml) 每天 **北京时间 11:20** 在 GitHub 检查上游 `IPQ60XX-WIFI-YES` 发布，确认包含雅典娜镜像后，更新 [build.lock.tsv](build.lock.tsv) 中的源码及必要 feed 提交，并提交来源记录 `sources/upstream.json`，同步更新本页的 ImmortalWrt 与内核版本表。
+[Athena Update Sources](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/workflows/SOURCE-UPDATE.yml) 每天 **北京时间 11:20** 在 GitHub 检查作者 `VIKINGYFY/immortalwrt` 的 **`main`** 分支，确认目标默认包含 NSS 驱动后，更新 [build.lock.tsv](build.lock.tsv) 中的源码及必要 feed 提交，并提交来源记录 `sources/upstream.json`，同步更新本页的 ImmortalWrt 与内核版本表。源码按完整提交固定，不跟随不含 NSS 的 `owrt` 发布。
 
 - 自动阶段只核对发布来源、源码提交和 feed 锁完整性，**不运行固件编译或 defconfig、不生成新固件、不发布 Release**。
 - 同一源码提交保留 feed 锁；只在版本记录缺失或本页版本表需要同步时补齐文档，无变化不提交。OpenClash、PassWall2、Lucky 等自定义插件锁及 Mihomo 二进制锁保持固定，应用 overlay 保留。
-- 当前更新策略跟随作者的 `owrt` 分支；来源、分支、feed 地址异常或版本回退时停止更新并保留失败日志。
+- 当前更新策略仅跟随作者的 `main` 分支；目标默认包缺少 NSS drv/ecm/dp、来源/feed 地址异常、版本回退或提交分叉时停止更新并保留失败日志。自动阶段验证源码声明，正式构建仍要求有效配置实际选中 NSS。
 - 编译入口仅支持手动触发。需要新固件时，再按上节运行预检和正式编译；真实配置和依赖兼容性在这时验证。
 - 两个任务均在 GitHub 云端运行，电脑可以关机。仓库现为 Private，定时更新仍启用；GitHub 定时任务可能延迟。私有仓库的 Actions 使用账户免费额度，额度或预算限制可能阻止后续运行，详见 [GitHub 计费说明](https://docs.github.com/en/billing/concepts/product-billing/github-actions)。
 

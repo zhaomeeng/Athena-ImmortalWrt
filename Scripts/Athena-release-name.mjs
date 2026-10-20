@@ -7,7 +7,7 @@ export function releaseName(createdAt) {
     throw new Error('Invalid workflow creation time.');
   }
   const date = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Shanghai', year: '2-digit', month: '2-digit', day: '2-digit'
+    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit'
   }).formatToParts(new Date(createdAt));
   const part = type => date.find(p => p.type === type).value;
   return `Athena-ImmortalWrt-${part('year')}${part('month')}${part('day')}`;
