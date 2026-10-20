@@ -51,4 +51,6 @@
 
 出现网络、来源、分支或 feed 校验失败时，任务失败且不提交更新；修正问题后可手动重跑检查。遇到 GitHub 分支保护禁止 bot 写入时，任务会报告 push 错误，需要按仓库实际规则处理。
 
-GitHub 定时任务可能延迟，公开仓库连续 60 天无活动可能自动停用，因此保留手动入口。无需本地程序常驻。依据：[GitHub schedule 文档](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)。
+仓库于 2026-10-21 改为 Private，Actions 与来源更新工作流仍启用，cron 保持北京时间每日 11:20。私有化后手动执行同一更新工作流 [39459455766](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39459455766) 成功，验证了私有仓库 checkout、上游读取、版本检查和报告上传；当前无变化，提交步骤跳过。未来定时触发需等下一个计划窗口确认，本次手动验证不能替代未来的定时触发证据。
+
+GitHub 定时任务可能延迟，因此保留手动入口，无需本地程序常驻。私有仓库的 GitHub-hosted runner 使用账户免费分钟及存储额度，超额计费或预算限制可能影响执行；固件编译仍仅手动触发。依据：[GitHub schedule 文档](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)、[GitHub Actions 计费说明](https://docs.github.com/en/billing/concepts/product-billing/github-actions)。

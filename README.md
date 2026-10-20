@@ -86,7 +86,7 @@ Get-FileHash .\immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgra
 - 同一源码提交保留 feed 锁；只在版本记录缺失或本页版本表需要同步时补齐文档，无变化不提交。OpenClash、PassWall2、Lucky 等自定义插件锁及 Mihomo 二进制锁保持固定，应用 overlay 保留。
 - 当前更新策略跟随作者的 `owrt` 分支；来源、分支、feed 地址异常或版本回退时停止更新并保留失败日志。
 - 编译入口仅支持手动触发。需要新固件时，再按上节运行预检和正式编译；真实配置和依赖兼容性在这时验证。
-- 两个任务均在 GitHub 云端运行，电脑可以关机。保留手动检查入口；GitHub 定时任务可能延迟，公开仓库长期不活跃时也可能停用。
+- 两个任务均在 GitHub 云端运行，电脑可以关机。仓库现为 Private，定时更新仍启用；GitHub 定时任务可能延迟。私有仓库的 Actions 使用账户免费额度，额度或预算限制可能阻止后续运行，详见 [GitHub 计费说明](https://docs.github.com/en/billing/concepts/product-billing/github-actions)。
 
 手动运行更新任务时，`dry_run=true` 仅报告建议变更；取消该选项才会提交更新。普通 push、定时检查及来源更新提交都不会触发固件构建。
 
