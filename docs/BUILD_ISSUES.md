@@ -1,5 +1,9 @@
 # 构建问题与处理记录
 
+## 2026-10-21 未选用 VNT 仓库失效阻断预检
+
+预检 39460712170 在 Custom Packages 阶段下载 lmq8267/luci-app-vnt 时收到认证提示并以 128 退出。独立 GitHub API 核对该仓库返回 404，其他 39 个包锁定提交可访问。VNT 不在雅典娜设备/GENERAL/应用配置的选择中，因此仅移除这项未选用插件的下载调用，保留历史锁以追溯来源，不替换仓库或放宽锁校验。该修复不改变 OpenClash、PassWall2、Docker 或底层驱动选择，需重新完成配置预检。
+
 ## 2026-10-06 两版编译已成功，B 的空资产上传失败
 
 [Run 37397400157](https://github.com/zhaomeeng/Athena-VIKINGYFY/actions/runs/37397400157) 工具链/最终固件编译、Package Firmware 和 Save firmware artifact 全部成功；Release Firmware 因零字节诊断文件被 GitHub 拒绝（size must be greater than or equal to 1）而失败。草稿 Release 404295561 已有 36 个非空构建资产及原 SHA256SUMS；只有 protected.diff、selected-rust-consumers.txt 两个空文件未能上传。原固件 artifact 为 11388558797，设备运行验证仍未完成。
