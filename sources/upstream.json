@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "source": {
+    "repository": "VIKINGYFY/immortalwrt",
+    "branch": "owrt",
+    "commit": "fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503",
+    "release_id": 417907106,
+    "release_tag": "IPQ60XX-WIFI-YES-VIKINGYFY-owrt-26.10.20-08.32.19",
+    "release_url": "https://github.com/VIKINGYFY/OpenWRT-CI/releases/tag/IPQ60XX-WIFI-YES-VIKINGYFY-owrt-26.10.20-08.32.19",
+    "published_at": "2026-10-20T01:21:23Z"
+  },
+  "resolved_at": "2026-10-20T08:34:05.845Z",
+  "feeds": [
+    {
+      "method": "src-git",
+      "name": "packages",
+      "url": "https://github.com/immortalwrt/packages.git",
+      "ref": "HEAD",
+      "commit": "72c7391fb2d04080afd0bfe919605749f81eb747"
+    },
+    {
+      "method": "src-git",
+      "name": "luci",
+      "url": "https://github.com/immortalwrt/luci.git",
+      "ref": "HEAD",
+      "commit": "6dafdfc6a918044f3d4beea816076b6c82c19919"
+    },
+    {
+      "method": "src-git",
+      "name": "routing",
+      "url": "https://github.com/openwrt/routing.git",
+      "ref": "HEAD",
+      "commit": "4b9891b9136259f93294a424507ed24c5e8c1cbd"
+    },
+    {
+      "method": "src-git",
+      "name": "telephony",
+      "url": "https://github.com/openwrt/telephony.git",
+      "ref": "HEAD",
+      "commit": "5d68d53c160a325ea9d03fce393e051573bcc736"
+    },
+    {
+      "method": "src-git",
+      "name": "video",
+      "url": "https://github.com/openwrt/video.git",
+      "ref": "HEAD",
+      "commit": "6917907d4d6c670cf85be525d23216595655061d"
+    },
+    {
+      "method": "src-git",
+      "name": "pon_drivers",
+      "url": "https://github.com/pbs05/openwrt-pon-drivers.git",
+      "ref": "HEAD",
+      "commit": "e5194d2dfd169eef8f4a944fdc3f929e0287b680"
+    },
+    {
+      "method": "src-git",
+      "name": "pon_userspace",
+      "url": "https://github.com/pbs05/openwrt-pon-userspace.git",
+      "ref": "HEAD",
+      "commit": "cce9d756742487b378749c606b30e13ee9b0f093"
+    }
+  ],
+  "build_lock_sha256": "aa449bc4f89ed6fa4b1e455da19dcfd79072f03c44df8627101f4ad82e97b51e",
+  "validation_scope": "source metadata and feed locks only; updater does not compile firmware",
+  "previous_source": {
+    "branch": "main",
+    "commit": "0fb9b10cb9df51fb076470e1dd93d1c30dd89d83"
+  },
+  "custom_package_and_binary_locks": "retained unchanged",
+  "base_framework_commit": "fb15d79b3526a360d3cb63d4781cbbd01a847428"
+}
