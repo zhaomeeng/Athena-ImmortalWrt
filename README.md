@@ -76,6 +76,8 @@ Get-FileHash .\immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgra
 
 手动运行更新任务时，`dry_run=true` 仅报告建议变更；取消该选项才会提交更新。普通 push、定时检查及来源更新提交都不会触发固件构建。
 
+2026-10-21 已完成云端验证：[首次定时更新成功](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39394314731)，自动提交仅包含源码/依赖锁和来源记录；再次检查无变化，未触发固件编译。详见 [验证记录](docs/validation/source-update-39394314731.json)。
+
 **仓库最新源码与已发布固件是两种状态。** 已发布双代理固件仍对应原 `main` 提交 `0fb9b10cb9df51fb076470e1dd93d1c30dd89d83`；来源自动更新后，新的源码需要等你手动编译才会成为新固件。以各 Release 保存的锁文件和构建记录确认该固件实际使用的版本。
 
 策略、异常处理和手动入口见 [上游更新说明](docs/UPSTREAM_UPDATES.md)。
