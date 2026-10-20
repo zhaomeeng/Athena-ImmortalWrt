@@ -4,7 +4,7 @@ import { mkdtemp, readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseLock, parseFeeds, parseRelease, loadInputs, planUpdate, applyPlan, pinFeeds, formatJson } from '../Scripts/Athena-sources.mjs';
+import { parseLock, parseFeeds, parseRelease, loadInputs, planUpdate, applyPlan, pinFeeds, formatJson, resolveVersions, renderVersionReadme } from '../Scripts/Athena-sources.mjs';
 
 const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 const policy = JSON.parse(await readFile(join(repoRoot, 'Config/UPSTREAM-SOURCE.json'), 'utf8'));
@@ -31,6 +31,7 @@ async function fixture(t) {
   await mkdir(join(root, 'Config'));
   await writeFile(join(root, 'Config/UPSTREAM-SOURCE.json'), formatJson(policy));
   await writeFile(join(root, 'build.lock.tsv'), initialLock());
+  await writeFile(join(root, 'README.md'), '# Fixture\n<!-- ATHENA-SOURCE-VERSIONS:START -->\n<!-- ATHENA-SOURCE-VERSIONS:END -->\nKeep custom text.\n');
   return root;
 }
 
@@ -43,6 +44,15 @@ function api({ releases = [release()], feeds = feedsText, branchHead = NEW, comp
     if (path.endsWith('/branches/owrt')) return { commit: { sha: branchHead } };
     if (path.includes('/compare/')) return { status: comparison };
     if (path.includes('/contents/feeds.conf.default?')) return { type: 'file', encoding: 'base64', content: Buffer.from(feeds).toString('base64') };
+    const versionFiles = {
+      'target/linux/qualcommax/Makefile': 'KERNEL_PATCHVER:=6.18\n',
+      'target/linux/qualcommax/ipq60xx/target.mk': 'SUBTARGET:=ipq60xx\n',
+      'target/linux/generic/kernel-6.18': 'LINUX_VERSION-6.18 = .55\n',
+      'include/version.mk': 'VERSION_NUMBER:=$(if $(VERSION_NUMBER),$(VERSION_NUMBER),SNAPSHOT)\nVERSION_DIST:=$(if $(VERSION_DIST),$(VERSION_DIST),ImmortalWRT)\n'
+    };
+    for (const [file, text] of Object.entries(versionFiles)) {
+      if (path.includes(`/contents/${file}?`)) return { type: 'file', encoding: 'base64', content: Buffer.from(text).toString('base64') };
+    }
     if (/\/commits\/(HEAD|release%2Fbranch|[0-9a-f]{40})$/.test(path)) {
       if (failFeed) throw new Error('Simulated feed outage.');
       const requested = path.split('/').at(-1);
@@ -103,6 +113,9 @@ test('resolve all new source feeds while retaining custom package and binary loc
   const plan = await planUpdate(root, mock.get, '2026-10-19T03:20:00Z');
   assert.equal(plan.changed, true);
   assert.equal(plan.record.feeds.length, 7);
+  assert.equal(plan.record.versions.kernel, '6.18.55');
+  assert.equal(plan.record.versions.immortalwrt, 'SNAPSHOT');
+  assert.match(plan.readmeText, /Keep custom text/);
   const after = parseLock(plan.lockText);
   assert.deepEqual(after.filter(e => ['package', 'binary'].includes(e.kind)), before);
   assert.equal(after[0].location, 'owrt');
@@ -113,6 +126,72 @@ test('resolve all new source feeds while retaining custom package and binary loc
   const noChange = await planUpdate(root, again.get);
   assert.equal(noChange.changed, false);
   assert.equal(again.calls.length, 1); // no daily feed/plugin drift for the same source commit
+  assert.equal(await readFile(join(root, 'README.md'), 'utf8'), plan.readmeText);
+});
+
+test('same source backfills version metadata and README without refreshing feeds', async t => {
+  const root = await fixture(t);
+  await applyPlan(root, await planUpdate(root, api().get));
+  const provenancePath = join(root, 'sources/upstream.json');
+  const provenance = JSON.parse(await readFile(provenancePath, 'utf8'));
+  delete provenance.versions;
+  await writeFile(provenancePath, formatJson(provenance));
+  const before = await readFile(join(root, 'build.lock.tsv'), 'utf8');
+  const mock = api();
+  const plan = await planUpdate(root, mock.get);
+  assert.equal(plan.changed, true);
+  assert.equal(plan.lockText, before);
+  assert.equal(mock.calls.some(p => p.includes('/commits/HEAD')), false);
+  await applyPlan(root, plan);
+  assert.equal((await planUpdate(root, api().get)).changed, false);
+});
+
+test('version lookup uses exact source SHA and refuses unknown kernel declarations', async () => {
+  const source = parseRelease(release(), policy);
+  const mock = api();
+  await resolveVersions(mock.get, source);
+  assert.ok(mock.calls.every(p => p.endsWith(`?ref=${NEW}`)));
+  await assert.rejects(resolveVersions(async path => path.includes('/kernel-6.18?')
+    ? { type: 'file', encoding: 'base64', content: Buffer.from('LINUX_VERSION-6.18 = $(unknown)\n').toString('base64') }
+    : mock.get(path), source), /kernel patch/);
+});
+
+test('version fetch failure leaves source locks, provenance and README untouched', async t => {
+  const root = await fixture(t);
+  const before = await readFile(join(root, 'README.md'), 'utf8');
+  const mock = api();
+  await assert.rejects(planUpdate(root, path => {
+    if (path.includes('/contents/include/version.mk?')) throw new Error('Version metadata unavailable');
+    return mock.get(path);
+  }), /unavailable/);
+  assert.equal(await readFile(join(root, 'README.md'), 'utf8'), before);
+  assert.equal(await readFile(join(root, 'build.lock.tsv'), 'utf8'), initialLock());
+  await assert.rejects(readFile(join(root, 'sources/upstream.json')), { code: 'ENOENT' });
+});
+
+test('same source repairs version section while retaining all custom README text', async t => {
+  const root = await fixture(t);
+  await applyPlan(root, await planUpdate(root, api().get));
+  const path = join(root, 'README.md');
+  const before = await readFile(path, 'utf8');
+  await writeFile(path, before.replace('**6.18.55**', '**stale**') + 'User notes.\n');
+  const plan = await planUpdate(root, api().get);
+  assert.equal(plan.changed, true);
+  assert.match(plan.readmeText, /\*\*6\.18\.55\*\*/);
+  assert.ok(plan.readmeText.endsWith('User notes.\n'));
+});
+
+test('README updates only marked section and rejects missing or duplicate markers', () => {
+  const source = parseRelease(release(), policy);
+  const versions = { kernel: '6.18.55', immortalwrt: 'SNAPSHOT', files: ['a', 'b', 'target/linux/generic/kernel-6.18'] };
+  const block = '<!-- ATHENA-SOURCE-VERSIONS:START -->\nold\n<!-- ATHENA-SOURCE-VERSIONS:END -->';
+  const result = renderVersionReadme(`Before\n${block}\nAfter`, source, versions);
+  assert.ok(result.startsWith('Before\n'));
+  assert.ok(result.endsWith('\nAfter'));
+  assert.match(result, /6\.18\.55/);
+  assert.match(result, /SNAPSHOT/);
+  assert.throws(() => renderVersionReadme('missing', source, versions), /markers/);
+  assert.throws(() => renderVersionReadme(block + block, source, versions), /markers/);
 });
 
 test('newer platform releases with unsupported branches stop instead of falling back', async t => {
@@ -206,7 +285,7 @@ test('build is manual only and the update workflow cannot dispatch a build', asy
   assert.doesNotMatch(triggers, /\b(push|schedule|workflow_run|repository_dispatch|pull_request):/);
   assert.match(update, /cron: '20 3 \* \* \*'/);
   assert.doesNotMatch(update, /WRT-CORE|workflow run|workflow_dispatches|\bmake\b|Athena-compile|actions:\s*write/);
-  assert.match(update, /git add -- build.lock.tsv sources\/upstream.json/);
+  assert.match(update, /git add -- build.lock.tsv sources\/upstream.json README.md/);
 });
 
 test('source runtime is installed after hosted tool cache cleanup', async () => {

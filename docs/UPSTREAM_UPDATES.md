@@ -1,6 +1,6 @@
 # 自动更新构建来源，手动编译固件
 
-更新日期：2026-10-19（Asia/Shanghai）。用户已明确采用本模式，替代先前“更新后自动编译候选固件”的建议。
+更新日期：2026-10-21（Asia/Shanghai）。用户已明确采用本模式，替代先前“更新后自动编译候选固件”的建议。
 
 ## 两个独立入口
 
@@ -18,10 +18,11 @@
 1. 查询 `VIKINGYFY/OpenWRT-CI` 的 Releases，筛选非草稿、非 prerelease 的 `IPQ60XX-WIFI-YES-VIKINGYFY-*` 平台发布；分页寻找对应平台，按发布时间选择最新记录。
 2. 要求发布包含非空配置、RE-CS-02 Factory 和 Sysupgrade 资产。从来源字段读取唯一的源码仓库、分支和完整 SHA；不使用属于编译框架仓库的 `target_commitish` 代替源码提交。
 3. 验证源码为 `VIKINGYFY/immortalwrt`、分支符合 `owrt` 白名单、提交存在且属于该分支。相同分支拒绝源码回退和分叉；已记录的发布时间也不能倒退。
-4. 如果锁定的源码和分支没有变化，立即结束，保留已有 feed 锁，避免重复发布或每日依赖漂移造成无意义提交。
+4. 如果锁定的源码和分支没有变化，保留已有 feed 锁，避免重复发布或每日依赖漂移。已有版本元数据时直接校对 README；缺失时仅从原锁定提交补齐版本，不刷新 feed。
 5. 从固定源码提交读取 `feeds.conf.default`。按允许的 GitHub 仓库解析每个启用的 git feed，固定其声明分支/提交或默认 HEAD。未知源类型、未知 feed、地址变化、重复声明和无法解析的提交均停止更新。
-6. 所有请求和检查成功后，仅写入 `build.lock.tsv` 的 source/feed 条目及 `sources/upstream.json`；原 package/binary 锁逐项保留。来源记录包含上游 Release、源码和 feed 提交、解析时间、锁摘要及更新时的框架提交。
-7. GitHub bot 仅提交上述两个文件。使用普通 push，遇到并发更新造成非快进时失败停止，不强推、不覆盖用户改动。
+6. 从同一个固定源码提交读取 qualcommax/IPQ60xx 的内核选择、`target/linux/generic/kernel-*` 的补丁版本及 `include/version.mk` 的 ImmortalWrt 默认版本。只解析文本，不运行上游脚本；不能可靠解析时停止，不猜测版本。SNAPSHOT 如实标注为开发版本，不能将发布日期当作 ImmortalWrt 正式版本号。
+7. 所有请求和检查成功后，写入 `build.lock.tsv` 的 source/feed 条目、`sources/upstream.json` 及 README 自动版本区块；原 package/binary 锁逐项保留。来源记录包含上游 Release、源码和 feed 提交、解析时间、锁摘要、版本及其文件来源和更新时的框架提交。版本表对应待编译源码，不代表已发布或运行中的固件。
+8. GitHub bot 仅允许提交 `build.lock.tsv`、`sources/upstream.json`、`README.md` 三个文件；README 只替换唯一的 `ATHENA-SOURCE-VERSIONS` 标记区块，保留其余内容，标记缺失或重复时停止。使用普通 push，遇到并发更新造成非快进时失败停止，不强推、不覆盖用户改动。无变化不提交。
 
 本仓库保存编译配置和版本锁，完整源码在手动编译时由 GitHub runner 拉取。更新任务不会把整个上游源码镜像进本仓库。
 

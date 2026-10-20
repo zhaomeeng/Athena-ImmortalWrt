@@ -12,6 +12,43 @@ const ensure = (condition, message) => { if (!condition) throw new Error(message
 const json = text => JSON.parse(text);
 export const formatJson = value => `${JSON.stringify(value, null, 2)}\n`;
 
+async function sourceFile(get, repository, commit, path) {
+  const result = await get(`/repos/${repository}/contents/${path}?ref=${commit}`);
+  ensure(result.type === 'file' && result.encoding === 'base64' && typeof result.content === 'string', 'Invalid source version file.');
+  return normalize(Buffer.from(result.content, 'base64').toString('utf8'));
+}
+
+export async function resolveVersions(get, source) {
+  const read = path => sourceFile(get, source.repository, source.commit, path);
+  const target = await read('target/linux/qualcommax/Makefile');
+  const subtarget = await read('target/linux/qualcommax/ipq60xx/target.mk');
+  const patch = text => [...text.matchAll(/^\s*KERNEL_PATCHVER\s*:?=\s*(\d+\.\d+)\s*$/gm)];
+  const assignments = patch(subtarget).length ? patch(subtarget) : patch(target);
+  ensure(assignments.length === 1, 'Missing or ambiguous target kernel version.');
+  const series = assignments[0][1];
+  const kernelFile = `target/linux/generic/kernel-${series}`;
+  const details = await read(kernelFile);
+  const suffixes = [...details.matchAll(new RegExp(`^LINUX_VERSION-${series.replace('.', '\\.')}\\s*:?=\\s*(\\.\\d+(?:[-a-z0-9.]*)?)\\s*$`, 'gm'))];
+  ensure(suffixes.length === 1, 'Missing or ambiguous kernel patch version.');
+  const versionMk = await read('include/version.mk');
+  const defaults = [...versionMk.matchAll(/^VERSION_NUMBER:=\$\(if \$\(VERSION_NUMBER\),\$\(VERSION_NUMBER\),([A-Za-z0-9_.-]+)\)\s*$/gm)];
+  ensure(defaults.length === 1, 'Unsupported ImmortalWrt source version declaration.');
+  ensure(/^VERSION_DIST:=.*ImmortalWRT\)\s*$/m.test(versionMk), 'Unexpected source distribution.');
+  return { kernel: series + suffixes[0][1], immortalwrt: defaults[0][1],
+    basis: 'locked source defaults; not a compiled firmware version',
+    files: ['target/linux/qualcommax/Makefile', 'target/linux/qualcommax/ipq60xx/target.mk', kernelFile, 'include/version.mk'] };
+}
+
+export function renderVersionReadme(text, source, versions) {
+  const start = '<!-- ATHENA-SOURCE-VERSIONS:START -->';
+  const end = '<!-- ATHENA-SOURCE-VERSIONS:END -->';
+  const normalized = normalize(text);
+  ensure(normalized.split(start).length === 2 && normalized.split(end).length === 2 && normalized.indexOf(end) > normalized.indexOf(start), 'Missing or ambiguous README version markers.');
+  const base = `https://github.com/${source.repository}/blob/${source.commit}`;
+  const block = `${start}\n## 当前待编译源码版本\n\n| 项目 | 锁定版本 |\n| --- | --- |\n| ImmortalWrt | **${versions.immortalwrt}**（源码默认版本） |\n| Linux 内核 | **${versions.kernel}** |\n| 源码分支 | \`${source.branch}\` |\n| 源码提交 | [\`${source.commit.slice(0, 12)}\`](https://github.com/${source.repository}/commit/${source.commit}) |\n| 对应上游发布 | [${source.release_tag}](${source.release_url}) |\n\n版本随源码更新任务自动维护，读取固定提交的 [版本声明](${base}/include/version.mk) 与 [内核版本文件](${base}/${versions.files[2]})。以上对应待编译源码，尚不代表本仓库已发布固件或路由器运行版本；SNAPSHOT 表示开发版本，具体来源以提交为准。\n${end}`;
+  return normalized.slice(0, normalized.indexOf(start)) + block + normalized.slice(normalized.indexOf(end) + end.length);
+}
+
 export function parseLock(text) {
   const entries = normalize(text).trimEnd().split('\n').map(line => {
     const fields = line.split('\t');
@@ -132,7 +169,13 @@ export async function planUpdate(root, get = githubClient(), now = new Date().to
   const candidate = parseRelease(releases[0], policy);
   if (provenance) ensure(Date.parse(candidate.published_at) >= Date.parse(provenance.source.published_at), 'Upstream publication moved backwards.');
   if (source.location === candidate.branch && source.revision === candidate.commit) {
-    return { changed: false, reason: 'Source commit unchanged; feed and plugin locks retained.', source: candidate };
+    const versions = provenance?.versions || await resolveVersions(get, candidate);
+    const record = { ...provenance, versions };
+    const readme = await readFile(join(root, 'README.md'), 'utf8');
+    const readmeText = renderVersionReadme(readme, provenance.source, versions);
+    return { changed: !provenance.versions || readmeText !== normalize(readme),
+      reason: 'Source commit unchanged; feed and plugin locks retained.', source: provenance.source,
+      lockText: normalize(lockText), record, readmeText };
   }
   const commit = await get(`/repos/${policy.source_repository}/commits/${candidate.commit}`);
   ensure(commit.sha === candidate.commit, 'Source commit could not be verified.');
@@ -167,7 +210,9 @@ export async function planUpdate(root, get = githubClient(), now = new Date().to
     previous_source: { branch: source.location, commit: source.revision },
     custom_package_and_binary_locks: 'retained unchanged',
     base_framework_commit: process.env.GITHUB_SHA || null };
-  return { changed: nextLock !== normalize(lockText), source: candidate, lockText: nextLock, record };
+  record.versions = await resolveVersions(get, candidate);
+  const readmeText = renderVersionReadme(await readFile(join(root, 'README.md'), 'utf8'), candidate, record.versions);
+  return { changed: nextLock !== normalize(lockText), source: candidate, lockText: nextLock, record, readmeText };
 }
 
 export async function applyPlan(root, plan) {
@@ -176,6 +221,7 @@ export async function applyPlan(root, plan) {
   await mkdir(join(root, 'sources'), { recursive: true });
   await writeFile(join(root, 'build.lock.tsv'), plan.lockText, 'utf8');
   await writeFile(join(root, 'sources/upstream.json'), formatJson(plan.record), 'utf8');
+  await writeFile(join(root, 'README.md'), plan.readmeText, 'utf8');
 }
 
 export async function pinFeeds(root, path) {
@@ -221,10 +267,12 @@ async function main() {
   if (!dryRun) await applyPlan(root, plan);
   const report = { ...plan };
   delete report.lockText;
+  delete report.readmeText;
   const out = join(root, 'artifacts/source-update');
   await mkdir(out, { recursive: true });
   await writeFile(join(out, 'report.json'), formatJson({ dry_run: dryRun, ...report }));
   if (plan.changed) await writeFile(join(out, 'proposed.build.lock.tsv'), plan.lockText);
+  if (plan.changed) await writeFile(join(out, 'proposed.README.md'), plan.readmeText);
   if (process.env.GITHUB_OUTPUT) await appendFile(process.env.GITHUB_OUTPUT,
     `changed=${plan.changed && !dryRun}\nsource_commit=${plan.source.commit}\n`);
   if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY,

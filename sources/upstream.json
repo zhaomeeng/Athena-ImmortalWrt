@@ -68,5 +68,16 @@
     "commit": "0fb9b10cb9df51fb076470e1dd93d1c30dd89d83"
   },
   "custom_package_and_binary_locks": "retained unchanged",
-  "base_framework_commit": "fb15d79b3526a360d3cb63d4781cbbd01a847428"
+  "base_framework_commit": "fb15d79b3526a360d3cb63d4781cbbd01a847428",
+  "versions": {
+    "kernel": "6.18.55",
+    "immortalwrt": "SNAPSHOT",
+    "basis": "locked source defaults; not a compiled firmware version",
+    "files": [
+      "target/linux/qualcommax/Makefile",
+      "target/linux/qualcommax/ipq60xx/target.mk",
+      "target/linux/generic/kernel-6.18",
+      "include/version.mk"
+    ]
+  }
 }
