@@ -8,6 +8,8 @@
 
 首次预检 39460712170：来源和日期命名校验成功，因未选用的 lmq8267/luci-app-vnt 仓库返回 404，在 Custom Packages 下载阶段停止；尚未执行 defconfig 或编译。已逐项检查 40 个自定义包锁，其余 39 个锁定提交可访问。修复仅跳过未选用 VNT 的下载，保留历史锁和应用/底层配置，随后重新预检。
 
+当前阻塞：修复后的预检 39462311708 已生成配置，protected.diff 为空，OpenClash/PassWall2/Xray/Sing-box/Docker 均选中，但必需 kmod-qca-nss-drv 未选中而失败。锁定 owrt 源码的作者目标默认包不含 NSS；当前 main 提交 f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49 的目标默认包包含 NSS drv/ecm/dp，内核同为 6.18.55。尚未放宽 NSS 检查、变更来源或启动正式编译；等待用户确认切换 main 并修正更新策略，或明确接受无 NSS 的 owrt。命名修改已交付，旧 Release 保留；详见 validation/preview-39462311708.json。
+
 仓库可见性：2026-10-21 按用户要求改为 Private，API 已确认 isPrivate=true；Actions enabled=true，来源更新工作流 active，每日 11:20 的 cron 未变。私有化后 [39459455766](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39459455766) 成功，当前来源无变化而跳过提交；未触发固件编译。未来计划触发尚待下一次定时窗口，执行受私有 Actions 额度及预算限制，见 UPSTREAM_UPDATES.md。
 
 当前状态：独立 Update Sources 定时任务已启用（计划北京时间每日 11:20，GitHub 可能延迟）；Build Firmware 入口仅手动触发，并从锁动态解析来源。自动更新提交 build.lock.tsv、sources/upstream.json 和 README 的自动版本区块，不执行 defconfig、编译或发布。[云端 dry-run 39281309649](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39281309649) 成功且提交步骤跳过；[首次定时更新 39394314731](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39394314731) 成功，bot 提交 194aac9 当时仅修改版本锁与来源记录，锁定 owrt 源码 fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503 和 7 个 feed。首次云端与本地 33 项测试全部通过；此前 Bash/ShellCheck/actionlint 已通过。2026-10-21 再次真实上游 dry-run 返回 changed=false，工作区无改动；最新固件编译仍是 38067565477，未被来源更新触发。README、更新说明及操作文档已同步，验证记录见 validation/source-update-39394314731.json。

@@ -1,0 +1,33 @@
+{
+  "verified_on": "2026-10-21",
+  "repository": "zhaomeeng/Athena-ImmortalWrt",
+  "preview_run": 39462311708,
+  "url": "https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39462311708",
+  "framework_commit": "fba7155f4fac10e2192aabc20f6ab1cb4a7b4eb1",
+  "source_commit": "fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503",
+  "source_branch": "owrt",
+  "conclusion": "failure",
+  "failed_step": "Custom Settings",
+  "failure": "Required package missing: kmod-qca-nss-drv",
+  "protected_diff_bytes": 0,
+  "confirmed_selected": ["luci-app-openclash", "luci-app-passwall2", "xray-core", "sing-box", "docker", "dockerd"],
+  "full_preflight_passed": false,
+  "firmware_compiled": false,
+  "release_created": false,
+  "dated_release_identity_step": "success",
+  "expected_future_release_name": "Athena-ImmortalWrt-261021",
+  "previous_failure": {
+    "run": 39460712170,
+    "reason": "Unused lmq8267/luci-app-vnt repository returns HTTP 404",
+    "fix_commit": "fba7155f4fac10e2192aabc20f6ab1cb4a7b4eb1",
+    "fix": "Skip unused VNT fetch; keep historical lock and application selections"
+  },
+  "alternative_source_read_only_check": {
+    "branch": "main",
+    "commit": "f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49",
+    "kernel": "6.18.55",
+    "target_defaults_include": ["kmod-qca-nss-drv", "kmod-qca-nss-ecm", "kmod-qca-nss-dp"],
+    "compiled_or_device_verified": false
+  },
+  "decision_required": "Keep NSS via main source and adjust source update policy, or explicitly accept owrt without NSS. No source or NSS gate change was applied."
+}
