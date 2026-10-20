@@ -19,10 +19,12 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+      actions: read
     outputs:
       repo: ${{ steps.locked.outputs.repo }}
       name: ${{ steps.locked.outputs.name }}
       branch: ${{ steps.locked.outputs.branch }}
+      release_tag: ${{ steps.release.outputs.tag }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -33,6 +35,11 @@ jobs:
       - name: Validate locked source provenance
         id: locked
         run: node Scripts/Athena-sources.mjs --resolve-build
+      - name: Resolve dated release name and prevent replacement
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node Scripts/Athena-release-name.mjs
   toolchain:
     needs: source
     uses: ./.github/workflows/WRT-CORE.yml
@@ -48,6 +55,7 @@ jobs:
       WRT_BRANCH: ${{ needs.source.outputs.branch }}
       WRT_SOURCE: ${{ needs.source.outputs.name }}
       WRT_STAGE: toolchain
+      WRT_RELEASE_TAG: ${{ needs.source.outputs.release_tag }}
       WRT_TEST: ${{ inputs.preview }}
   athena:
     needs: [source, toolchain]
@@ -64,5 +72,6 @@ jobs:
       WRT_BRANCH: ${{ needs.source.outputs.branch }}
       WRT_SOURCE: ${{ needs.source.outputs.name }}
       WRT_STAGE: firmware
+      WRT_RELEASE_TAG: ${{ needs.source.outputs.release_tag }}
       WRT_CHECKPOINT_STAGE: toolchain
       WRT_TEST: ${{ inputs.preview }}

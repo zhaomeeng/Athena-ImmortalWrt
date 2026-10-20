@@ -51,6 +51,8 @@
 
 在 [Releases](https://github.com/zhaomeeng/Athena-ImmortalWrt/releases) 下载设备名称含 **`jdcloud_re-cs-02`** 的镜像。
 
+后续 Release 名称、标签及最终固件 artifact 统一采用 **`Athena-ImmortalWrt-yymmdd`**，例如 `Athena-ImmortalWrt-261021`。日期取构建任务创建时的北京时间，跨日完成或重跑仍使用同一个名称。同一天已有其他构建发布时停止，避免覆盖；历史 `athena-b-*` Release 保留。镜像文件继续使用包含设备名称的标准文件名，内部检查点/诊断 artifact 保留原标识以保证续编兼容。
+
 | 文件 | 用途 |
 | --- | --- |
 | `*-jdcloud_re-cs-02-*-sysupgrade.bin` | 已运行兼容 OpenWrt 系固件时，按对应升级流程手动升级 |

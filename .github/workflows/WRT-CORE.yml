@@ -52,6 +52,9 @@ on:
         required: false
         default: ''
         type: string
+      WRT_RELEASE_TAG:
+        required: true
+        type: string
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -321,7 +324,7 @@ jobs:
         if: ${{ !inputs.WRT_TEST && inputs.WRT_STAGE == 'firmware' && success() }}
         uses: actions/upload-artifact@v4
         with:
-          name: athena-b-firmware-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ inputs.WRT_RELEASE_TAG }}
           path: wrt/upload/
           if-no-files-found: error
 
@@ -329,11 +332,13 @@ jobs:
         if: ${{ !inputs.WRT_TEST && inputs.WRT_STAGE == 'firmware' && success() }}
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: athena-b-${{ github.run_id }}
+          tag_name: ${{ inputs.WRT_RELEASE_TAG }}
+          name: ${{ inputs.WRT_RELEASE_TAG }}
           target_commitish: ${{ github.sha }}
           files: ./release-upload/*
           body: |
-            京东云雅典娜 RE-CS-02 / B版。云端编译产物，设备运行验证待完成。
+            京东云雅典娜 RE-CS-02 / Athena-ImmortalWrt。云端编译产物，设备运行验证待完成。
+            构建任务：https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
             框架提交：${{ github.sha }}
             源码：${{ env.WRT_REPO }}
             源码提交：${{ env.WRT_HASH }}

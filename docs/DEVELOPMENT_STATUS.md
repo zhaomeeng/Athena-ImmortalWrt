@@ -4,6 +4,8 @@
 
 当前目标：自动维护上游源码和必要 feed 版本锁，仅由用户手动发起配置预检与固件编译。
 
+本轮用户授权：后续 Release 名称/标签及最终固件 artifact 改为 Athena-ImmortalWrt-yymmdd，并启动一次新固件编译。日期按任务创建时北京时间固定，同日已有其他 Run 发布时拒绝覆盖；历史发布与内部检查点名称保留。命名及来源测试共 41 项通过，actionlint 和差异检查通过。当前先启动新 owrt 来源的配置预检，通过后继续正式编译；应用组合仍为 OpenClash + PassWall2 + Docker，默认关闭。
+
 仓库可见性：2026-10-21 按用户要求改为 Private，API 已确认 isPrivate=true；Actions enabled=true，来源更新工作流 active，每日 11:20 的 cron 未变。私有化后 [39459455766](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39459455766) 成功，当前来源无变化而跳过提交；未触发固件编译。未来计划触发尚待下一次定时窗口，执行受私有 Actions 额度及预算限制，见 UPSTREAM_UPDATES.md。
 
 当前状态：独立 Update Sources 定时任务已启用（计划北京时间每日 11:20，GitHub 可能延迟）；Build Firmware 入口仅手动触发，并从锁动态解析来源。自动更新提交 build.lock.tsv、sources/upstream.json 和 README 的自动版本区块，不执行 defconfig、编译或发布。[云端 dry-run 39281309649](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39281309649) 成功且提交步骤跳过；[首次定时更新 39394314731](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39394314731) 成功，bot 提交 194aac9 当时仅修改版本锁与来源记录，锁定 owrt 源码 fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503 和 7 个 feed。首次云端与本地 33 项测试全部通过；此前 Bash/ShellCheck/actionlint 已通过。2026-10-21 再次真实上游 dry-run 返回 changed=false，工作区无改动；最新固件编译仍是 38067565477，未被来源更新触发。README、更新说明及操作文档已同步，验证记录见 validation/source-update-39394314731.json。

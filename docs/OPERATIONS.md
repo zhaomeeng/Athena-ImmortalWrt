@@ -7,12 +7,12 @@
 1. 在 GitHub Actions 打开 `Athena Build Firmware`，勾选 preview 运行预检。此入口仅支持手动触发；源码自动更新不会启动它。
 2. 确认两个预检任务都成功，下载 `athena-b-config-firmware-*`；检查 `preflight.txt`、`protected.diff`（应为空）、`application.diff`、`final.config`、空的 `selected-rust-consumers.txt` 和 `checkpoint-restore-firmware.txt`。预检仅解析配置并验证源树跨任务恢复，不编译或发布。
 3. 保持同一套已通过预检的源锁与配置，取消 preview 运行正式编译。先完成工具/工具链/内核，再编译其余软件包（包括 PassWall2/Xray/Sing-box）并打包固件；两个任务串行，每个编译阶段最多四小时，留出运行器准备、检查点恢复和诊断上传时间。PassWall 1、Shadowsocks Rust 不选中，不执行独立 Rust 编译。正式编译先执行配置预检，后续任务恢复同一次运行的源树、验证源码/输入/配置哈希及底层保护证据，不重复改写应用配置。每个产物记录实际框架提交；配置或锁文件更新后必须重新预检。
-4. 成功后从 `athena-b-*` Release 下载雅典娜 Factory/Sysupgrade 和 SHA256SUMS，以及配置、manifest 和 packages。
+4. 成功后从 `Athena-ImmortalWrt-yymmdd` Release 下载雅典娜 Factory/Sysupgrade 和 SHA256SUMS，以及配置、manifest 和 packages。名称和标签的日期取任务创建时的北京时间，重跑和跨日完成不变；同日已发布其他 Run 时停止，禁止覆盖已有发布。历史 `athena-b-*` 标签保留，镜像文件名和内部检查点名称保持兼容。
 5. 要重建相同源配置，检出该 Release 记录的框架提交，并保持该版本的 `build.lock.tsv`。平时 `Athena Update Sources` 自动维护最新上游源码与必要 feed 锁，自定义插件和二进制锁保持固定；手动编译前查看来源记录并重新预检，不能将锁记录不同的预检与正式构建混用。
 
 ## 自动维护来源
 
-`Athena Update Sources` 每天北京时间 11:20 检查上游平台发布，只更新版本锁和 `sources/upstream.json`。手动运行默认 dry_run 只检查，取消后才提交。它不编译固件、不自动预检或发布；详细策略和异常处理见 [UPSTREAM_UPDATES.md](UPSTREAM_UPDATES.md)。
+`Athena Update Sources` 每天北京时间 11:20 检查上游平台发布，更新版本锁、`sources/upstream.json` 和 README 自动版本区块。手动运行默认 dry_run 只检查，取消后才提交。它不编译固件、不自动预检或发布；详细策略和异常处理见 [UPSTREAM_UPDATES.md](UPSTREAM_UPDATES.md)。
 
 首次来源更新允许从已验证的旧 main 提交迁移到作者现用 owrt 分支，并为新启用的 feed 补齐固定提交；这不代表新源码已通过编译。真实兼容性在你手动启动 Build Firmware 后验证。最新已发布固件继续保留，供下载或回退使用。
 
