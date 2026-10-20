@@ -1,0 +1,31 @@
+{
+  "verified_on": "2026-10-21",
+  "repository": "zhaomeeng/Athena-ImmortalWrt",
+  "run_id": 39466737391,
+  "url": "https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39466737391",
+  "created_at": "2026-10-20T17:30:51Z",
+  "event": "workflow_dispatch",
+  "preview": false,
+  "status_at_verification": "in_progress",
+  "source_job": "success",
+  "toolchain_at_verification": "environment preparation",
+  "framework_commit": "c9e47bc3cb81ca7294783647e2f983b55a44c3be",
+  "source_branch": "main",
+  "source_commit": "f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49",
+  "source_kernel_default": "6.18.55",
+  "source_immortalwrt_default": "SNAPSHOT",
+  "expected_release_name": "Athena-ImmortalWrt-20261021",
+  "nss_required_configuration_gate": "retained; effective configuration validation pending",
+  "source_update_verification": {
+    "run_id": 39466754244,
+    "conclusion": "success",
+    "tests_passed": 42,
+    "changed": false,
+    "commit_step": "skipped"
+  },
+  "local_tests_passed": 45,
+  "custom_package_and_binary_locks": "unchanged",
+  "firmware_success_confirmed": false,
+  "release_created": false,
+  "device_verified": false
+}

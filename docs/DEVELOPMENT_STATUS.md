@@ -4,6 +4,8 @@
 
 当前目标：自动维护上游源码和必要 feed 版本锁，仅由用户手动发起配置预检与固件编译。
 
+本轮正式构建已启动：[39466737391](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39466737391)，preview=false，框架 c9e47bc；来源与日期命名任务成功，当前为工具链任务环境准备，尚未确认 defconfig 或编译完成。预期 Release 为 Athena-ImmortalWrt-20261021。新版来源更新 [39466754244](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39466754244) 成功，42 项来源测试通过，changed=false、提交跳过；本地另有 3 项发布命名测试通过。记录见 validation/build-39466737391-start.json。
+
 本轮用户最新确认：切回作者 main 并保留 NSS，修正自动来源更新策略；Release 名称/标签及最终 artifact 使用 Athena-ImmortalWrt-yyyymmdd（例 Athena-ImmortalWrt-20261021），按任务创建时北京时间固定，同日不覆盖其他 Run。源码锁已迁移到 main / f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49，内核 6.18.55，ImmortalWrt SNAPSHOT，启用 5 个 feed；自定义 package/binary 锁和应用配置保持不变。45 项测试及真实来源更新/重复 dry-run 通过，无重复变更。接下来按用户授权启动正式任务，任务内先执行实际 defconfig/NSS/应用保护检查，通过才编译。
 
 首次预检 39460712170：来源和日期命名校验成功，因未选用的 lmq8267/luci-app-vnt 仓库返回 404，在 Custom Packages 下载阶段停止；尚未执行 defconfig 或编译。已逐项检查 40 个自定义包锁，其余 39 个锁定提交可访问。修复仅跳过未选用 VNT 的下载，保留历史锁和应用/底层配置，随后重新预检。
