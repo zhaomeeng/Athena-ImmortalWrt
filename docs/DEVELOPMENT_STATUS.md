@@ -4,6 +4,8 @@
 
 当前目标：自动维护上游源码和必要 feed 版本锁，仅由用户手动发起配置预检与固件编译。
 
+修复后正式运行已提交：[39617853029](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39617853029)，框架 0fbb042，preview=false，显式 checkpoint_run_id=39466737391；当前 GitHub 排队，工具链新编译任务已跳过。源码/配置/恢复校验及新的 GNU make 递归覆盖云端测试仍待 runner 执行，不能视为镜像成功。预期发布 Athena-ImmortalWrt-20261021。检查记录见 validation/build-39617853029-start.json。
+
 正式构建 39466737391 已失败：工具链/内核和有效 NSS/应用预检成功，固件阶段 Sing-box 在串行重试中已编译成功；随后为多设备反复生成根文件系统，磁盘降到 2.2 GiB，触发 3 GiB 保护线，退出 143。修复仅以原生 TARGET_DEVICES 参数生成雅典娜镜像，不改配置或来源锁。新增显式跨 Run 复用完整工具链检查点，仍校验同仓库/分支、完成状态、Run、输入/配置/源码/归档哈希。55 项本地测试通过，GNU make 递归覆盖测试留给 GitHub Linux runner；语法、ShellCheck、actionlint 通过。准备从旧工具链检查点启动新的正式固件任务，预期名称仍为 Athena-ImmortalWrt-20261021。
 
 本轮用户最新确认：切回作者 main 并保留 NSS，修正自动来源更新策略；Release 名称/标签及最终 artifact 使用 Athena-ImmortalWrt-yyyymmdd（例 Athena-ImmortalWrt-20261021），按任务创建时北京时间固定，同日不覆盖其他 Run。源码锁已迁移到 main / f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49，内核 6.18.55，ImmortalWrt SNAPSHOT，启用 5 个 feed；自定义 package/binary 锁和应用配置保持不变。45 项测试及真实来源更新/重复 dry-run 通过，无重复变更。接下来按用户授权启动正式任务，任务内先执行实际 defconfig/NSS/应用保护检查，通过才编译。
