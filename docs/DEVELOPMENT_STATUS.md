@@ -4,7 +4,7 @@
 
 当前目标：自动维护上游源码和必要 feed 版本锁，仅由用户手动发起配置预检与固件编译。
 
-修复后正式运行已提交：[39617853029](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39617853029)，框架 0fbb042，preview=false，显式 checkpoint_run_id=39466737391；当前 GitHub 排队，工具链新编译任务已跳过。源码/配置/恢复校验及新的 GNU make 递归覆盖云端测试仍待 runner 执行，不能视为镜像成功。预期发布 Athena-ImmortalWrt-20261021。检查记录见 validation/build-39617853029-start.json。
+修复后正式运行已提交：[39617853029](https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39617853029)，框架 0fbb042，preview=false，显式 checkpoint_run_id=39466737391；入口 source 任务已成功（含云端测试、来源/日期和旧检查点元数据检查），工具链新编译任务已跳过，固件任务正在清理运行器空间。完整归档恢复及其输入/配置/源码哈希校验、实际编译和镜像检查仍待执行，不能视为镜像成功。预期发布 Athena-ImmortalWrt-20261021。检查记录见 validation/build-39617853029-start.json。
 
 正式构建 39466737391 已失败：工具链/内核和有效 NSS/应用预检成功，固件阶段 Sing-box 在串行重试中已编译成功；随后为多设备反复生成根文件系统，磁盘降到 2.2 GiB，触发 3 GiB 保护线，退出 143。修复仅以原生 TARGET_DEVICES 参数生成雅典娜镜像，不改配置或来源锁。新增显式跨 Run 复用完整工具链检查点，仍校验同仓库/分支、完成状态、Run、输入/配置/源码/归档哈希。55 项本地测试通过，GNU make 递归覆盖测试留给 GitHub Linux runner；语法、ShellCheck、actionlint 通过。准备从旧工具链检查点启动新的正式固件任务，预期名称仍为 Athena-ImmortalWrt-20261021。
 

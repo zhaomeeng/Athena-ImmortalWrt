@@ -15,12 +15,14 @@
   "new_run_url": "https://github.com/zhaomeeng/Athena-ImmortalWrt/actions/runs/39617853029",
   "created_at": "2026-10-21T14:33:35Z",
   "framework_commit": "0fbb042b0749d5333f948fa27f5d0e29f2269f24",
-  "status_at_verification": "queued",
+  "status_at_verification": "in_progress",
   "new_toolchain_job": "skipped",
   "expected_release_name": "Athena-ImmortalWrt-20261021",
   "local_tests": { "passed": 55, "failed": 0, "skipped": 1, "skip_reason": "GNU make recursive override is verified on Linux runner" },
   "syntax_shellcheck_actionlint": "passed",
   "live_preceding_run_metadata_validation": "passed",
-  "cloud_guard_tests_and_restore": "pending",
+  "cloud_guard_tests": "source job success",
+  "cloud_archive_restore": "pending",
+  "firmware_job_at_verification": "Reclaim hosted runner disk space",
   "firmware_or_device_success_confirmed": false
 }
