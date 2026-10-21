@@ -55,6 +55,10 @@ on:
       WRT_RELEASE_TAG:
         required: true
         type: string
+      WRT_CHECKPOINT_RUN_ID:
+        required: false
+        default: ''
+        type: string
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -71,6 +75,7 @@ env:
   WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
   WRT_TEST: ${{inputs.WRT_TEST}}
   WRT_STAGE: ${{inputs.WRT_STAGE}}
+  WRT_CHECKPOINT_RUN_ID: ${{inputs.WRT_CHECKPOINT_RUN_ID}}
 
 jobs:
   core:
@@ -186,7 +191,9 @@ jobs:
         if: ${{ steps.checkpoint.outputs.stage != '' }}
         uses: actions/download-artifact@v4
         with:
-          name: athena-b-checkpoint-${{ steps.checkpoint.outputs.stage }}-${{ github.run_id }}
+          name: athena-b-checkpoint-${{ steps.checkpoint.outputs.stage }}-${{ inputs.WRT_CHECKPOINT_RUN_ID || github.run_id }}
+          run-id: ${{ inputs.WRT_CHECKPOINT_RUN_ID || github.run_id }}
+          github-token: ${{ github.token }}
           path: checkpoint-download/
 
       - name: Restore and validate build checkpoint

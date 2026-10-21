@@ -41,7 +41,9 @@ setsid timeout --signal=TERM --kill-after=60s 240m bash -c '
         toolchain)
             build_target tools/install && build_target toolchain/install && build_target target/compile ;;
         firmware)
-            build_target ;;
+            # Upstream include/image.mk iterates TARGET_DEVICES. Avoid generating
+            # rootfs copies for every author-selected board; .config stays intact.
+            build_target TARGET_DEVICES=jdcloud_re-cs-02 ;;
     esac
 ' &
 compiler_pid=$!

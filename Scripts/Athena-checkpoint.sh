@@ -77,7 +77,14 @@ case "$mode" in
             *) echo 'Invalid checkpoint completion state.' >&2; exit 1 ;;
         esac
         [[ "$(cat "$src/preview.txt")" == "$WRT_TEST" ]]
-        [[ "$(cat "$src/run.txt")" == "${GITHUB_RUN_ID:?}" ]]
+        expected_run=${WRT_CHECKPOINT_RUN_ID:-${GITHUB_RUN_ID:?}}
+        if [[ "$expected_run" != "$GITHUB_RUN_ID" ]]; then
+            [[ "$expected_run" =~ ^[0-9]+$ && "$WRT_STAGE" == firmware && "$stage" == toolchain \
+                && "$WRT_TEST" == false && "$(cat "$src/complete.txt")" == true ]] || {
+                echo 'Cross-run restore accepts only completed formal toolchain checkpoints.' >&2; exit 1;
+            }
+        fi
+        [[ "$(cat "$src/run.txt")" == "$expected_run" ]]
         [[ "$(cat "$src/arch.txt")" == "$(uname -m)" ]]
         [[ "$(cat "$src/inputs.sha256")" == "$(input_hash)" ]] || {
             echo 'Build inputs differ from checkpoint; stop.' >&2; exit 1;
@@ -103,6 +110,9 @@ case "$mode" in
             mv -- "$out/runner-space.txt" "$out/runner-space-${WRT_STAGE:?}.txt"
         fi
         cp -a .athena-evidence/. "$out/"
+        cp "$out/framework-commit.txt" "$out/checkpoint-framework-commit.txt"
+        git -C "$task_root" rev-parse HEAD > "$out/framework-commit.txt"
+        printf '%s\n' "$expected_run" > "$out/checkpoint-origin-run.txt"
         while IFS='=' read -r key value; do
             case "$key" in
                 WRT_DATE|WRT_WIFI|WRT_KVER|WRT_LIST|WRT_HASH) printf '%s=%s\n' "$key" "$value" >> "$GITHUB_ENV" ;;
