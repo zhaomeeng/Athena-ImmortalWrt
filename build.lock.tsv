@@ -17,7 +17,7 @@ package	nikkinikki-org/OpenWrt-nikki	main	7b203f6c4c5e94c6c0026acb301090aa1d310e
 package	vernesong/OpenClash	dev	48d202ddd309a3a6f50e9699412866186f678579
 package	Openwrt-Passwall/openwrt-passwall	main	a60c49eb21ee4514e4d829970882e7d01bacea3c
 package	Openwrt-Passwall/openwrt-passwall2	main	2de5aee7a4c704a5b689fdab47b97a18ad11c1a2
-package	gdy666/luci-app-lucky	main	c1730565c6df4ab30d345cf73584f03f5cc7bc8f
+package	gdy666/luci-app-lucky	main	b07f65c28bb5fa3da1fea4b8af5ce24a1488e79a
 package	4IceG/luci-app-mini-diskmanager	main	4b2b7332896063ef888f34da2187c3cc6f366037
 package	EasyTier/luci-app-easytier	main	79b2b01ded627a634e4bea8d60c7be0f00b708b0
 package	FUjr/QModem	main	c49654efc870f53712ee8e25bf181722eb1466d9
