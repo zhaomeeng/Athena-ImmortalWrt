@@ -45,13 +45,13 @@
       "commit": "6917907d4d6c670cf85be525d23216595655061d"
     }
   ],
-  "build_lock_sha256": "e2a7192e6e364fee5fe9d86e6f29e9e3c0493414f61b9aa4b21fc8b0cfe42c6f",
+  "build_lock_sha256": "ec534ce80009122193c012a9a4f171dbc172a7f69501a8f0733ab670277f13a8",
   "validation_scope": "source metadata and feed locks only; updater does not compile firmware",
   "previous_source": {
     "branch": "owrt",
     "commit": "fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503"
   },
-  "custom_package_and_binary_locks": "retained unchanged",
+  "custom_package_and_binary_locks": "Lucky updated to upstream main b07f65c (core 3.5.0, LuCI 3.0.0); other package and binary locks retained",
   "base_framework_commit": null,
   "versions": {
     "kernel": "6.18.55",
