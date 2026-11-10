@@ -14,44 +14,44 @@
       "name": "packages",
       "url": "https://github.com/immortalwrt/packages.git",
       "ref": "HEAD",
-      "commit": "395ca4d2df4754cdb8e89bc4b37cdbcf54d905b0"
+      "commit": "72c7391fb2d04080afd0bfe919605749f81eb747"
     },
     {
       "method": "src-git",
       "name": "luci",
       "url": "https://github.com/immortalwrt/luci.git",
       "ref": "HEAD",
-      "commit": "64cb10331bd3204da8a6a30107c2bf02e5e2399c"
+      "commit": "6dafdfc6a918044f3d4beea816076b6c82c19919"
     },
     {
       "method": "src-git",
       "name": "routing",
       "url": "https://github.com/openwrt/routing.git",
       "ref": "HEAD",
-      "commit": "ea8633da9c461a9bdc62a0323439d31180762e03"
+      "commit": "4b9891b9136259f93294a424507ed24c5e8c1cbd"
     },
     {
       "method": "src-git",
       "name": "telephony",
       "url": "https://github.com/openwrt/telephony.git",
       "ref": "HEAD",
-      "commit": "9bcb6d71db03377ff49ccb099be763add9a5b059"
+      "commit": "5d68d53c160a325ea9d03fce393e051573bcc736"
     },
     {
       "method": "src-git",
       "name": "video",
       "url": "https://github.com/openwrt/video.git",
       "ref": "HEAD",
-      "commit": "2cb1f4bd2293184d80d053cc4da6e0b9ab629916"
+      "commit": "6917907d4d6c670cf85be525d23216595655061d"
     }
   ],
-  "build_lock_sha256": "8d41f62adc1d8904918b8411ca90a068bd223ef456fffbb1352380346f6eceea",
+  "build_lock_sha256": "dec7f87f920d8fad814d25ff3c9eb3e739bfad53d86198f1c8329613a8c2ba92",
   "validation_scope": "source metadata and feed locks only; updater does not compile firmware",
   "previous_source": {
     "branch": "owrt",
     "commit": "fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503"
   },
-  "custom_package_and_binary_locks": "Custom package branch heads refreshed 2026-11-10; Lucky 3.8.0 Wanji via pinned official tarball and LuCI 3.0.0; Mihomo 1.19.33",
+  "custom_package_and_binary_locks": "Lucky 3.8.0 Wanji and custom package heads refreshed 2026-11-10; compatible feed commits restored from successful 2026-11-06 build; Mihomo 1.19.33",
   "base_framework_commit": null,
   "versions": {
     "kernel": "6.18.55",
