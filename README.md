@@ -29,7 +29,7 @@
 | Docker | 包含 Docker、dockerd、必要依赖和 Dockerman 管理界面 |
 | 网络 | 保留上游 NSS 配置、FullCone NAT Sonic、UPnP、WOL Ultra |
 | 存储 | 保留 USB 存储支持、Mini Disk Manager、Samba4、Partexp |
-| 管理 | 包含 Lucky 核心 3.5.0 / LuCI 3.0.0、TTYD、AutoReboot、Firewall 和 Package Manager |
+| 管理 | 包含 Lucky 核心 3.8.0 Wanji / LuCI 3.0.0、TTYD、AutoReboot、Firewall 和 Package Manager |
 | 界面 | Aurora 主题及配置插件 |
 
 应用选择集中在 [Config/ATHENA-APPS.txt](Config/ATHENA-APPS.txt)。删除 HomeProxy、GecoosAC、NATMapT，不加入 PassWall 1、AdGuardHome、MosDNS、SmartDNS、SQM、iStore 和 Attended Sysupgrade 等应用。

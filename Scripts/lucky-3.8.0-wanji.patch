@@ -1,0 +1,21 @@
+--- a/lucky/Makefile
++++ b/lucky/Makefile
+@@ -4,5 +4,5 @@
+
+ PKG_NAME:=lucky
+-PKG_VERSION:=3.5.0
++PKG_VERSION:=3.8.0
+ PKG_RELEASE:=1
+
+@@ -49,8 +49,8 @@
+ endif
+
+-PKG_SOURCE:=lucky_$(PKG_VERSION)_Linux_$(LUCKY_ARCH).tar.gz
+-PKG_SOURCE_URL:=https://github.com/gdy666/lucky/releases/download/v$(PKG_VERSION)
+-PKG_HASH:=skip
++PKG_SOURCE:=lucky_$(PKG_VERSION)_Linux_$(LUCKY_ARCH)_wanji.tar.gz
++PKG_SOURCE_URL:=https://release.66666.host/v3.8.0/3.8.0_wanji
++PKG_HASH:=34c57ee787179c90b6e2045996358c1777ae57d929f814bc4a845f0a77a9799a
+ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+
+ include $(INCLUDE_DIR)/package.mk

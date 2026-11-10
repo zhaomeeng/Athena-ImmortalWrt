@@ -11,7 +11,7 @@ stage=${2:?toolchain}
 input_hash() {
     (
         cd "$task_root"
-        sha256sum build.lock.tsv Config/*.txt Scripts/Packages.sh Scripts/Handles.sh \
+        sha256sum build.lock.tsv Config/*.txt Scripts/Packages.sh Scripts/lucky-3.8.0-wanji.patch Scripts/Handles.sh \
             Scripts/Settings.sh Scripts/Athena-prepare.sh Scripts/Athena-config.sh \
             Scripts/Athena-sources.mjs Config/UPSTREAM-SOURCE.json
         if [[ -f sources/upstream.json ]]; then sha256sum sources/upstream.json; fi
