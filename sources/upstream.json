@@ -7,51 +7,51 @@
     "selection": "branch-head",
     "source_url": "https://github.com/VIKINGYFY/immortalwrt/commit/f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49"
   },
-  "resolved_at": "2026-11-10T05:40:31.716Z",
+  "resolved_at": "2026-11-12T08:51:22.673Z",
   "feeds": [
     {
       "method": "src-git",
       "name": "packages",
       "url": "https://github.com/immortalwrt/packages.git",
       "ref": "HEAD",
-      "commit": "72c7391fb2d04080afd0bfe919605749f81eb747"
+      "commit": "decf94639ffd6ddd26591c190b547c6b7eea150b"
     },
     {
       "method": "src-git",
       "name": "luci",
       "url": "https://github.com/immortalwrt/luci.git",
       "ref": "HEAD",
-      "commit": "6dafdfc6a918044f3d4beea816076b6c82c19919"
+      "commit": "ad75cde88e694b511100576bfbe0a280e5efe6ef"
     },
     {
       "method": "src-git",
       "name": "routing",
       "url": "https://github.com/openwrt/routing.git",
       "ref": "HEAD",
-      "commit": "4b9891b9136259f93294a424507ed24c5e8c1cbd"
+      "commit": "ea8633da9c461a9bdc62a0323439d31180762e03"
     },
     {
       "method": "src-git",
       "name": "telephony",
       "url": "https://github.com/openwrt/telephony.git",
       "ref": "HEAD",
-      "commit": "5d68d53c160a325ea9d03fce393e051573bcc736"
+      "commit": "9bcb6d71db03377ff49ccb099be763add9a5b059"
     },
     {
       "method": "src-git",
       "name": "video",
       "url": "https://github.com/openwrt/video.git",
       "ref": "HEAD",
-      "commit": "6917907d4d6c670cf85be525d23216595655061d"
+      "commit": "92f51f0f3fffa718fc9d3717a5e852e8ddb2b1e7"
     }
   ],
-  "build_lock_sha256": "dec7f87f920d8fad814d25ff3c9eb3e739bfad53d86198f1c8329613a8c2ba92",
+  "build_lock_sha256": "f2a7ddac16c406a774bf83aa96f38db6a2bbdc29717bd6b779e5ac91ebaf5744",
   "validation_scope": "source metadata and feed locks only; updater does not compile firmware",
   "previous_source": {
     "branch": "owrt",
     "commit": "fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503"
   },
-  "custom_package_and_binary_locks": "Lucky 3.8.0 Wanji and custom package heads refreshed 2026-11-10; compatible feed commits restored from successful 2026-11-06 build; Mihomo 1.19.33",
+  "custom_package_and_binary_locks": "Manually refreshed reachable package branch heads and all five feed heads 2026-11-12; Lucky 3.8.0 Wanji via pinned official tarball; Mihomo 1.19.34",
   "base_framework_commit": null,
   "versions": {
     "kernel": "6.18.55",
