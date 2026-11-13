@@ -1,3 +1,5 @@
+**最新更新日期：2026-11-13**
+
 # Athena-ImmortalWrt
 
 面向 **京东云雅典娜 AX6600（RE-CS-02 / IPQ60xx）** 的 ImmortalWrt 定制固件构建项目。
