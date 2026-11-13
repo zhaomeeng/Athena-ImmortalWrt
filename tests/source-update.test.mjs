@@ -296,52 +296,64 @@ test('source runtime is installed after hosted tool cache cleanup', async () => 
   assert.ok(core.indexOf('Set up source validation runtime') < core.indexOf('Prepare Athena locked sources and service defaults'));
 });
 
-function mainApi({ head = NEW, nss = true, comparison = 'ahead' } = {}) {
+function owrtApi({ head = NEW, defaults = true, wifi = true, comparison = 'ahead' } = {}) {
   const mock = api({ branchHead: head, comparison });
   const calls = [];
   return { calls, get: async path => {
     calls.push(path);
-    if (path.endsWith('/branches/main')) return { commit: { sha: head } };
+    if (path.endsWith('/branches/owrt')) return { commit: { sha: head } };
     if (path.includes('/contents/target/linux/qualcommax/Makefile?')) {
       const packages = productionPolicy.required_target_packages.join(' \\\n  ');
-      const text = `KERNEL_PATCHVER:=6.18\n${nss ? 'DEFAULT_PACKAGES +=' : '# DEFAULT_PACKAGES +='} ${packages}\n`;
+      const text = `KERNEL_PATCHVER:=6.18\n${defaults ? 'DEFAULT_PACKAGES +=' : '# DEFAULT_PACKAGES +='} ${packages}\n`;
+      return { type: 'file', encoding: 'base64', content: Buffer.from(text).toString('base64') };
+    }
+    if (path.includes('/contents/target/linux/qualcommax/ipq60xx/target.mk?')) {
+      const text = `SUBTARGET:=ipq60xx\n${wifi ? 'DEFAULT_PACKAGES +=' : '# DEFAULT_PACKAGES +='} ${productionPolicy.required_subtarget_packages.join(' ')}\n`;
       return { type: 'file', encoding: 'base64', content: Buffer.from(text).toString('base64') };
     }
     return mock.get(path);
   } };
 }
 
-test('main tracking ignores owrt releases, validates NSS and is idempotent', async t => {
+test('owrt tracking ignores releases, validates PPE and NSS Wi-Fi defaults and is idempotent', async t => {
   const root = await fixture(t);
   await writeFile(join(root, 'Config/UPSTREAM-SOURCE.json'), formatJson(productionPolicy));
-  const mock = mainApi();
+  const mock = owrtApi();
   const plan = await planUpdate(root, mock.get);
-  assert.equal(plan.source.branch, 'main');
+  assert.equal(plan.source.branch, 'owrt');
   assert.equal(plan.source.selection, 'branch-head');
-  assert.match(plan.readmeText, /保留 NSS/);
+  assert.match(plan.readmeText, /PPE 有线网络与 NSS Wi-Fi/);
   assert.equal(mock.calls.some(p => p.includes('/releases?')), false);
   assert.deepEqual(parseLock(plan.lockText).filter(e => ['package', 'binary'].includes(e.kind)), parseLock(initialLock()).filter(e => ['package', 'binary'].includes(e.kind)));
   await applyPlan(root, plan);
-  assert.equal((await planUpdate(root, mainApi().get)).changed, false);
+  assert.equal((await planUpdate(root, owrtApi().get)).changed, false);
 });
 
-test('main tracking refuses NSS declared only in comments before writing any input', async t => {
+test('owrt tracking refuses required defaults declared only in comments before writing any input', async t => {
   const root = await fixture(t);
   await writeFile(join(root, 'Config/UPSTREAM-SOURCE.json'), formatJson(productionPolicy));
-  await assert.rejects(planUpdate(root, mainApi({ nss: false }).get), /NSS target default missing/);
+  await assert.rejects(planUpdate(root, owrtApi({ defaults: false }).get), /owrt target default missing/);
   assert.equal(await readFile(join(root, 'build.lock.tsv'), 'utf8'), initialLock());
   await assert.rejects(readFile(join(root, 'sources/upstream.json')), { code: 'ENOENT' });
 });
 
-test('main source tracking refuses rollback and switching back to owrt', async t => {
+test('owrt tracking refuses missing NSS Wi-Fi subtarget default', async t => {
   const root = await fixture(t);
   await writeFile(join(root, 'Config/UPSTREAM-SOURCE.json'), formatJson(productionPolicy));
-  await assert.rejects(planUpdate(root, mainApi({ comparison: 'behind' }).get), /roll back/);
-  await writeFile(join(root, 'Config/UPSTREAM-SOURCE.json'), formatJson({ ...productionPolicy, tracking_branch: 'owrt' }));
-  await assert.rejects(planUpdate(root, mainApi().get), /approved NSS main/);
+  await assert.rejects(planUpdate(root, owrtApi({ wifi: false }).get), /owrt subtarget default missing/);
+  assert.equal(await readFile(join(root, 'build.lock.tsv'), 'utf8'), initialLock());
 });
 
-test('only the approved owrt migration commit may enter main tracking', async t => {
+test('owrt source tracking refuses rollback and switching back to main', async t => {
+  const root = await fixture(t);
+  await writeFile(join(root, 'Config/UPSTREAM-SOURCE.json'), formatJson(productionPolicy));
+  await applyPlan(root, await planUpdate(root, owrtApi().get));
+  await assert.rejects(planUpdate(root, owrtApi({ head: '6'.repeat(40), comparison: 'behind' }).get), /roll back/);
+  await writeFile(join(root, 'Config/UPSTREAM-SOURCE.json'), formatJson({ ...productionPolicy, tracking_branch: 'main' }));
+  await assert.rejects(planUpdate(root, owrtApi().get), /approved owrt/);
+});
+
+test('only the approved main migration commit may enter owrt tracking', async t => {
   const root = await fixture(t);
   await writeFile(join(root, 'Config/UPSTREAM-SOURCE.json'), formatJson(productionPolicy));
   const migration = productionPolicy.migration_sources[0];
@@ -350,7 +362,7 @@ test('only the approved owrt migration commit may enter main tracking', async t 
   await mkdir(join(root, 'sources'));
   await writeFile(join(root, 'build.lock.tsv'), oldLock);
   await writeFile(join(root, 'sources/upstream.json'), formatJson({ source: { repository: policy.source_repository, ...migration }, build_lock_sha256: digest(oldLock) }));
-  assert.equal((await planUpdate(root, mainApi().get)).source.branch, 'main');
+  assert.equal((await planUpdate(root, owrtApi().get)).source.branch, 'owrt');
   await writeFile(join(root, 'build.lock.tsv'), oldLock.replace(migration.commit, '9'.repeat(40)));
   await assert.rejects(loadInputs(root), /not approved/);
 });

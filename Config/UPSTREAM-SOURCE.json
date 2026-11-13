@@ -3,12 +3,14 @@
   "source_repository": "VIKINGYFY/immortalwrt",
   "release_prefix": "IPQ60XX-WIFI-YES-VIKINGYFY-",
   "update_mode": "branch-head",
-  "tracking_branch": "main",
-  "allowed_branches": ["main"],
+  "tracking_branch": "owrt",
+  "allowed_branches": ["owrt"],
   "migration_sources": [
+    { "branch": "main", "commit": "f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49" },
     { "branch": "owrt", "commit": "fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503" }
   ],
-  "required_target_packages": ["kmod-qca-nss-drv", "kmod-qca-nss-ecm", "kmod-qca-nss-dp"],
+  "required_target_packages": ["kmod-dsa-qca8k", "qca-ppe-qos"],
+  "required_subtarget_packages": ["kmod-nss-wifi-drv"],
   "legacy_source": {
     "branch": "main",
     "commit": "0fb9b10cb9df51fb076470e1dd93d1c30dd89d83"

@@ -20,7 +20,7 @@ make defconfig
 cp .config "$out/final.config"
 
 # Normalize protected settings, including disabled symbols.
-protected='^CONFIG_(TARGET|LINUX|NSS|ATH11K|IPQ|QCA|MAC80211|PACKAGE_(kmod-(qca|ath|usb|mmc|sdhci)|ath11k-firmware|ipq-wifi|nss-|firewall|fullconenat|luci-app-fullconenat|mmc-utils|cpufreq))'
+protected='^CONFIG_(TARGET|LINUX|NSS|ATH11K|IPQ|QCA|MAC80211|PACKAGE_(kmod-(qca|ath|usb|mmc|sdhci|nss)|ath11k-firmware|ipq-wifi|nss-|qca-ppe-qos|luci-app-qca-ppe-qos|firewall|fullconenat|luci-app-fullconenat|mmc-utils|cpufreq))'
 normalize_protected() {
     sed -E 's/^# (CONFIG_[^ ]+) is not set$/\1=n/' "$1" | grep -E "$protected" | sort
 }
@@ -28,7 +28,7 @@ normalize_protected "$out/baseline.config" > "$out/baseline.protected.config"
 normalize_protected "$out/final.config" > "$out/final.protected.config"
 diff -u "$out/baseline.protected.config" "$out/final.protected.config" > "$out/protected.diff" || {
     cat "$out/protected.diff"
-    echo 'Protected configuration changed. Stop; do not alter NSS / Wi-Fi / device baseline.' >&2
+    echo 'Protected configuration changed. Stop; do not alter PPE / NSS Wi-Fi / device baseline.' >&2
     exit 1
 }
 diff -u "$out/baseline.config" "$out/final.config" > "$out/application.diff" || true
@@ -39,7 +39,7 @@ required=(luci luci-app-firewall luci-app-package-manager luci-theme-aurora luci
     luci-app-passwall2 luci-i18n-passwall2-zh-cn xray-core sing-box
     chinadns-ng geoview v2ray-geoip v2ray-geosite
     luci-app-lucky luci-app-ttyd docker dockerd containerd runc
-    dnsmasq-full kmod-qca-nss-drv kmod-qca-nss-ecm
+    dnsmasq-full kmod-dsa-qca8k qca-ppe-qos kmod-nss-wifi-drv
     kmod-ath11k kmod-ath11k-pci kmod-usb-storage mmc-utils)
 for name in "${required[@]}"; do
     grep -qx "CONFIG_PACKAGE_$name=y" .config || { echo "Required package missing: $name" >&2; exit 1; }

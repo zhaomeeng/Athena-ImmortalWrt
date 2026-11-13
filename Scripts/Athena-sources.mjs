@@ -46,7 +46,7 @@ export function renderVersionReadme(text, source, versions) {
   ensure(normalized.split(start).length === 2 && normalized.split(end).length === 2 && normalized.indexOf(end) > normalized.indexOf(start), 'Missing or ambiguous README version markers.');
   const base = `https://github.com/${source.repository}/blob/${source.commit}`;
   const origin = source.selection === 'branch-head'
-    ? `| 更新来源 | 作者 \`${source.branch}\` 分支固定提交（保留 NSS） |`
+    ? `| 更新来源 | 作者 \`${source.branch}\` 分支固定提交（PPE 有线网络与 NSS Wi-Fi） |`
     : `| 对应上游发布 | [${source.release_tag}](${source.release_url}) |`;
   const block = `${start}\n## 当前待编译源码版本\n\n| 项目 | 锁定版本 |\n| --- | --- |\n| ImmortalWrt | **${versions.immortalwrt}**（源码默认版本） |\n| Linux 内核 | **${versions.kernel}** |\n| 源码分支 | \`${source.branch}\` |\n| 源码提交 | [\`${source.commit.slice(0, 12)}\`](https://github.com/${source.repository}/commit/${source.commit}) |\n${origin}\n\n版本随源码更新任务自动维护，读取固定提交的 [版本声明](${base}/include/version.mk) 与 [内核版本文件](${base}/${versions.files[2]})。以上对应待编译源码，尚不代表本仓库已发布固件或路由器运行版本；SNAPSHOT 表示开发版本，具体来源以提交为准。\n${end}`;
   return normalized.slice(0, normalized.indexOf(start)) + block + normalized.slice(normalized.indexOf(end) + end.length);
@@ -162,7 +162,7 @@ export async function planUpdate(root, get = githubClient(), now = new Date().to
   const { policy, source, entries, lockText, provenance } = input;
   let candidate;
   if (policy.update_mode === 'branch-head') {
-    ensure(policy.tracking_branch === 'main' && policy.allowed_branches.length === 1 && policy.allowed_branches[0] === 'main', 'Branch tracking must stay on approved NSS main.');
+    ensure(policy.tracking_branch === 'owrt' && policy.allowed_branches.length === 1 && policy.allowed_branches[0] === 'owrt', 'Branch tracking must stay on approved owrt.');
     const head = await get(`/repos/${policy.source_repository}/branches/${policy.tracking_branch}`);
     ensure(SHA.test(head.commit?.sha || ''), 'Invalid source branch response.');
     candidate = { repository: policy.source_repository, branch: policy.tracking_branch, commit: head.commit.sha,
@@ -205,10 +205,13 @@ export async function planUpdate(root, get = githubClient(), now = new Date().to
   }
   if (policy.update_mode === 'branch-head') {
     const target = await sourceFile(get, policy.source_repository, candidate.commit, 'target/linux/qualcommax/Makefile');
-    const defaults = [...normalize(target).replace(/#[^\n]*/g, '').replace(/\\\n/g, ' ').matchAll(/^DEFAULT_PACKAGES\s*\+=([^\n]*)/gm)]
+    const subtarget = await sourceFile(get, policy.source_repository, candidate.commit, 'target/linux/qualcommax/ipq60xx/target.mk');
+    const defaults = text => [...normalize(text).replace(/#[^\n]*/g, '').replace(/\\\n/g, ' ').matchAll(/^DEFAULT_PACKAGES\s*\+=([^\n]*)/gm)]
       .flatMap(match => match[1].trim().split(/\s+/));
-    ensure(Array.isArray(policy.required_target_packages) && policy.required_target_packages.includes('kmod-qca-nss-drv') && policy.required_target_packages.includes('kmod-qca-nss-ecm') && policy.required_target_packages.includes('kmod-qca-nss-dp'), 'Missing NSS source policy.');
-    for (const name of policy.required_target_packages) ensure(defaults.includes(name), `Required NSS target default missing: ${name}`);
+    ensure(Array.isArray(policy.required_target_packages) && policy.required_target_packages.includes('qca-ppe-qos') &&
+      Array.isArray(policy.required_subtarget_packages) && policy.required_subtarget_packages.includes('kmod-nss-wifi-drv'), 'Missing owrt source policy.');
+    for (const name of policy.required_target_packages) ensure(defaults(target).includes(name), `Required owrt target default missing: ${name}`);
+    for (const name of policy.required_subtarget_packages) ensure(defaults(subtarget).includes(name), `Required owrt subtarget default missing: ${name}`);
   }
   const contents = await get(`/repos/${policy.source_repository}/contents/feeds.conf.default?ref=${candidate.commit}`);
   ensure(contents.type === 'file' && contents.encoding === 'base64' && typeof contents.content === 'string', 'Invalid feed file response.');

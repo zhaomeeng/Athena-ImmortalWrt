@@ -29,7 +29,7 @@ jobs:
           node-version: '24'
       - name: Test source update guards
         run: node --test tests/source-update.test.mjs
-      - name: Resolve NSS source and feed locks
+      - name: Resolve owrt source and feed locks
         id: sources
         env:
           GH_TOKEN: ${{ github.token }}

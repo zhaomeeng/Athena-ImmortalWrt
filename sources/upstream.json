@@ -2,12 +2,12 @@
   "schema_version": 1,
   "source": {
     "repository": "VIKINGYFY/immortalwrt",
-    "branch": "main",
-    "commit": "f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49",
+    "branch": "owrt",
+    "commit": "0b433e656fd6886aa2f32f923c8d2d8dfc94835e",
     "selection": "branch-head",
-    "source_url": "https://github.com/VIKINGYFY/immortalwrt/commit/f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49"
+    "source_url": "https://github.com/VIKINGYFY/immortalwrt/commit/0b433e656fd6886aa2f32f923c8d2d8dfc94835e"
   },
-  "resolved_at": "2026-11-12T08:51:22.673Z",
+  "resolved_at": "2026-11-13T00:46:04.610Z",
   "feeds": [
     {
       "method": "src-git",
@@ -42,19 +42,33 @@
       "name": "video",
       "url": "https://github.com/openwrt/video.git",
       "ref": "HEAD",
-      "commit": "92f51f0f3fffa718fc9d3717a5e852e8ddb2b1e7"
+      "commit": "97137d9e4bbf2d5b8fc74b49d2a8641f21855032"
+    },
+    {
+      "method": "src-git",
+      "name": "pon_drivers",
+      "url": "https://github.com/pbs05/openwrt-pon-drivers.git",
+      "ref": "HEAD",
+      "commit": "2789b970a6bfcc5ee56cee699622201b8061b67c"
+    },
+    {
+      "method": "src-git",
+      "name": "pon_userspace",
+      "url": "https://github.com/pbs05/openwrt-pon-userspace.git",
+      "ref": "HEAD",
+      "commit": "cce9d756742487b378749c606b30e13ee9b0f093"
     }
   ],
-  "build_lock_sha256": "f2a7ddac16c406a774bf83aa96f38db6a2bbdc29717bd6b779e5ac91ebaf5744",
+  "build_lock_sha256": "b2c38f28dda391e86be687f6a56185e4f0976fdbaf74745e777ae5ad9962e7ba",
   "validation_scope": "source metadata and feed locks only; updater does not compile firmware",
   "previous_source": {
-    "branch": "owrt",
-    "commit": "fd7cdeefc0d62a22a3d8b89d6aed42c42e18a503"
+    "branch": "main",
+    "commit": "f9b0ce7650fdcc7f4793256a3ae43c1132e2bc49"
   },
-  "custom_package_and_binary_locks": "Manually refreshed reachable package branch heads and all five feed heads 2026-11-12; Lucky 3.8.0 Wanji via pinned official tarball; Mihomo 1.19.34",
+  "custom_package_and_binary_locks": "retained unchanged",
   "base_framework_commit": null,
   "versions": {
-    "kernel": "6.18.55",
+    "kernel": "6.18.60",
     "immortalwrt": "SNAPSHOT",
     "basis": "locked source defaults; not a compiled firmware version",
     "files": [

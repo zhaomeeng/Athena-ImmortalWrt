@@ -12,9 +12,9 @@
 
 ## 自动维护来源
 
-`Athena Update Sources` 每天北京时间 11:20 检查作者 main 分支的新提交和目标 NSS 声明，更新版本锁、`sources/upstream.json` 和 README 自动版本区块。手动运行默认 dry_run 只检查，取消后才提交。它不编译固件、不自动预检或发布；详细策略和异常处理见 [UPSTREAM_UPDATES.md](UPSTREAM_UPDATES.md)。
+`Athena Update Sources` 每天北京时间 11:20 检查作者 owrt 分支的新提交和 PPE / NSS Wi-Fi 默认包声明，更新版本锁、`sources/upstream.json` 和 README 自动版本区块。手动运行默认 dry_run 只检查，取消后才提交。它不编译固件、不自动预检或发布；详细策略和异常处理见 [UPSTREAM_UPDATES.md](UPSTREAM_UPDATES.md)。
 
-2026-10-21 预检确认 owrt 不含必需 NSS，用户确认切回作者 main 并保留 NSS。自动策略仅允许从确切旧 main 或已记录的 owrt 提交迁移到 main，后续只接受 main 的快进提交，不再从 owrt Release 选择来源。main 当前声明与实际配置、驱动和设备的兼容性仍需正式构建与真机验证。旧版已发布固件保留供回退。
+当前默认分支 `owrt` 使用作者 owrt 源码及其有线 PPE / NSS Wi-Fi 路径；原有线 NSS 方案保存在 `nss` 分支。该分支的配置尚未运行云端预检或正式编译，兼容性与设备表现仍需后续验证。旧版已发布固件保留供回退。
 
 ## 编译检查点与恢复
 
@@ -38,13 +38,13 @@
 
 ## 验证顺序
 
-首次启动确认 OpenClash、PassWall2、Docker 关闭，然后按 `REQUIREMENTS.md` 的当前生效要求完成有线 IPv4/IPv6、千兆上下行、NSS/CPU负载、Wi-Fi 80MHz、Wi-Fi 160MHz 长时间与多设备测试。记录终端、频宽、测试时长、吞吐、断流和日志，再测试服务。
+首次启动确认 OpenClash、PassWall2、Docker 关闭，然后完成有线 IPv4/IPv6、千兆上下行、PPE/CPU 负载、NSS Wi-Fi、Wi-Fi 80MHz、Wi-Fi 160MHz 长时间与多设备测试。记录终端、频宽、测试时长、吞吐、断流和日志，再测试服务。
 
 OpenClash：导入自己的配置，启用服务；核查国内站点、Google/ChatGPT/Gemini、日本节点/AI分组、DNS/IPv6。订阅和密钥不得提交 Git。
 
 PassWall2：先停止 OpenClash 并确认其已退出，再配置节点、启用 PassWall2，分别验证 Xray/Sing-box、TCP/UDP、DNS、IPv6 和透明代理。恢复 OpenClash 前先停止 PassWall2；禁止同时让两套代理接管 DNS/透明代理。Xray/Sing-box 由 PassWall2 管理，不单独启动其系统服务。固件不包含 PassWall 1 或独立 Shadowsocks Rust；保留 PassWall2 原生的其他非 Rust 可选依赖。
 
-最后启用 Docker：配置持久化存储路径，运行 dockerd，检查 bridge、DNS、NSS/Firewall、内存和日志。不要为了 Docker 修改 NSS、无线或作者的 Firewall 核心实现。
+最后启用 Docker：配置持久化存储路径，运行 dockerd，检查 bridge、DNS、PPE/Firewall、内存和日志。不要为了 Docker 修改 PPE、NSS Wi-Fi、无线或作者的 Firewall 核心实现。
 
 首次关闭只控制默认状态，不替代用户启用服务前的检查。
 
